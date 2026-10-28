@@ -1,9 +1,14 @@
 # DriftMesh — App
 
-The frontend: a device browser and two lookup tools, reading live from
-`indexer`'s REST API. React + Vite + TypeScript, styled as a frosted-glass
-UI (blurred translucent panels over an animated gradient backdrop) with
-full light/dark support.
+The frontend: a landing page plus a device browser and two lookup tools,
+reading live from `indexer`'s REST API. React + Vite + TypeScript, styled
+as a frosted-glass UI (blurred translucent panels over an animated
+gradient backdrop) with full light/dark support.
+
+The landing page (`src/components/Landing.tsx`) pulls its device-count
+stats from the same live `GET /devices` endpoint the dashboard uses —
+not hardcoded marketing numbers. Clicking the brand mark in the
+dashboard's header returns to it.
 
 ## Scope — read-only by design
 
@@ -40,6 +45,12 @@ npm run build      # production build to dist/
 Not a mockup — run against the real indexer, which was itself polling
 real Stellar testnet contracts (see `contracts/TESTNET.md`). While
 building this:
+
+- The landing page's live stat card showed the real registered/active
+  device counts, and the "Explore the network" / brand-mark navigation
+  between landing and dashboard was tested on a fresh page load (an
+  earlier click during active HMR editing silently no-opped — stale dev
+  state, not a shipped bug; confirmed fixed by reloading and retesting).
 
 - Registered a brand-new second device live (`air_quality`, London) via
   `device-sdk` *after* the indexer was already running, confirmed it

@@ -1,19 +1,26 @@
 import { useState } from 'react';
 import './App.css';
+import { Landing } from './components/Landing';
 import { DeviceList } from './components/DeviceList';
 import { DeviceDetail } from './components/DeviceDetail';
 import { RegionLookup } from './components/RegionLookup';
 import { SubscriptionCheck } from './components/SubscriptionCheck';
 
 type Tab = 'devices' | 'region' | 'subscription';
+type View = 'landing' | 'app';
 
 function App() {
+  const [view, setView] = useState<View>('landing');
   const [tab, setTab] = useState<Tab>('devices');
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
 
   function selectTab(next: Tab) {
     setTab(next);
     setSelectedDevice(null);
+  }
+
+  if (view === 'landing') {
+    return <Landing onEnter={() => setView('app')} />;
   }
 
   return (
@@ -24,7 +31,13 @@ function App() {
       </div>
 
       <header className="glass topbar">
-        <div className="brand">
+        <div
+          className="brand brand-clickable"
+          onClick={() => setView('landing')}
+          role="button"
+          tabIndex={0}
+          aria-label="Back to landing page"
+        >
           <span className="brand-mark" aria-hidden="true" />
           DriftMesh
         </div>
