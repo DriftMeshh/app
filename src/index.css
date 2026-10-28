@@ -1,0 +1,303 @@
+:root {
+  --bg-1: #4f7cff;
+  --bg-2: #8b5cf6;
+  --bg-3: #ec4899;
+  --bg-4: #06b6d4;
+
+  --glass-bg: rgba(255, 255, 255, 0.14);
+  --glass-bg-strong: rgba(255, 255, 255, 0.22);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-shadow: rgba(15, 23, 42, 0.25);
+
+  --text-primary: #0b1220;
+  --text-secondary: rgba(11, 18, 32, 0.62);
+  --text-on-glass: #0b1220;
+
+  --accent: #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.15);
+  --success: #16a34a;
+  --success-soft: rgba(22, 163, 74, 0.16);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.14);
+
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-sm: 14px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-1: #1e3a8a;
+    --bg-2: #4c1d95;
+    --bg-3: #831843;
+    --bg-4: #0e7490;
+
+    --glass-bg: rgba(20, 22, 32, 0.46);
+    --glass-bg-strong: rgba(28, 30, 42, 0.62);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --glass-shadow: rgba(0, 0, 0, 0.45);
+
+    --text-primary: #f1f3fb;
+    --text-secondary: rgba(241, 243, 251, 0.64);
+    --text-on-glass: #f1f3fb;
+
+    --accent: #60a5fa;
+    --accent-soft: rgba(96, 165, 250, 0.18);
+    --success: #4ade80;
+    --success-soft: rgba(74, 222, 128, 0.16);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.18);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg-1: #1e3a8a;
+  --bg-2: #4c1d95;
+  --bg-3: #831843;
+  --bg-4: #0e7490;
+  --glass-bg: rgba(20, 22, 32, 0.46);
+  --glass-bg-strong: rgba(28, 30, 42, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: rgba(0, 0, 0, 0.45);
+  --text-primary: #f1f3fb;
+  --text-secondary: rgba(241, 243, 251, 0.64);
+  --text-on-glass: #f1f3fb;
+  --accent: #60a5fa;
+  --accent-soft: rgba(96, 165, 250, 0.18);
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.16);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.18);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', system-ui,
+    sans-serif;
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* Soft animated blobs behind everything — the "iOS wallpaper" backdrop
+   that the glass panels blur over. Fixed so it never scrolls away. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #0a0e1a 0%, #0a0e1a 100%);
+  overflow: hidden;
+}
+
+.backdrop::before,
+.backdrop::after,
+.blob-3,
+.blob-4 {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+}
+
+.backdrop::before {
+  width: 55vmax;
+  height: 55vmax;
+  top: -15vmax;
+  left: -10vmax;
+  background: var(--bg-1);
+  animation: float-a 22s ease-in-out infinite alternate;
+}
+
+.backdrop::after {
+  width: 50vmax;
+  height: 50vmax;
+  bottom: -20vmax;
+  right: -10vmax;
+  background: var(--bg-2);
+  animation: float-b 26s ease-in-out infinite alternate;
+}
+
+.blob-3 {
+  width: 40vmax;
+  height: 40vmax;
+  top: 30%;
+  right: 10%;
+  background: var(--bg-3);
+  animation: float-a 18s ease-in-out infinite alternate-reverse;
+}
+
+.blob-4 {
+  width: 38vmax;
+  height: 38vmax;
+  bottom: 10%;
+  left: 15%;
+  background: var(--bg-4);
+  animation: float-b 24s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes float-a {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(6vw, 4vh) scale(1.08);
+  }
+}
+
+@keyframes float-b {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-5vw, -5vh) scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop::before,
+  .backdrop::after,
+  .blob-3,
+  .blob-4 {
+    animation: none;
+  }
+}
+
+/* ---- Glass surfaces ---- */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 8px 32px var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  color: var(--text-on-glass);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(32px) saturate(170%);
+  -webkit-backdrop-filter: blur(32px) saturate(170%);
+}
+
+.glass-button {
+  appearance: none;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  color: var(--text-on-glass);
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.glass-button:hover {
+  background: var(--glass-bg-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--glass-shadow);
+}
+
+.glass-button:active {
+  transform: translateY(0);
+}
+
+.glass-button[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.glass-input {
+  appearance: none;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .glass-input {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+  }
+}
+
+:root[data-theme='dark'] .glass-input {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.glass-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pill-success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.pill-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.pill-neutral {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--text-secondary);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
