@@ -33,49 +33,49 @@ function App() {
       </div>
 
       <header className="glass topbar">
-        <div
-          className="brand brand-clickable"
-          onClick={() => setView('landing')}
-          role="button"
-          tabIndex={0}
-          aria-label="Back to landing page"
-        >
-          <span className="brand-mark" aria-hidden="true" />
-          DriftMesh
-        </div>
-        <div className="topbar-right">
-          <nav className="glass nav-tabs">
-            <button
-              className="glass-button"
-              aria-pressed={tab === 'devices'}
-              onClick={() => selectTab('devices')}
-            >
-              Devices
-            </button>
-            <button
-              className="glass-button"
-              aria-pressed={tab === 'map'}
-              onClick={() => selectTab('map')}
-            >
-              Map
-            </button>
-            <button
-              className="glass-button"
-              aria-pressed={tab === 'region'}
-              onClick={() => selectTab('region')}
-            >
-              Region lookup
-            </button>
-            <button
-              className="glass-button"
-              aria-pressed={tab === 'subscription'}
-              onClick={() => selectTab('subscription')}
-            >
-              Subscription
-            </button>
-          </nav>
+        <div className="topbar-top-row">
+          <div
+            className="brand brand-clickable"
+            onClick={() => setView('landing')}
+            role="button"
+            tabIndex={0}
+            aria-label="Back to landing page"
+          >
+            <span className="brand-mark" aria-hidden="true" />
+            DriftMesh
+          </div>
           <WalletButton />
         </div>
+        <nav className="glass nav-tabs">
+          <button
+            className="glass-button"
+            aria-pressed={tab === 'devices'}
+            onClick={() => selectTab('devices')}
+          >
+            Devices
+          </button>
+          <button
+            className="glass-button"
+            aria-pressed={tab === 'map'}
+            onClick={() => selectTab('map')}
+          >
+            Map
+          </button>
+          <button
+            className="glass-button"
+            aria-pressed={tab === 'region'}
+            onClick={() => selectTab('region')}
+          >
+            Region lookup
+          </button>
+          <button
+            className="glass-button"
+            aria-pressed={tab === 'subscription'}
+            onClick={() => selectTab('subscription')}
+          >
+            Subscription
+          </button>
+        </nav>
       </header>
 
       <main className="page">

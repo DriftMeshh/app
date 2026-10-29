@@ -101,8 +101,21 @@ building this:
   computed from the single real reading.
 - Checked a real subscriber's status and got back `active: true` with
   the actual on-chain expiry timestamp, correctly formatted.
-- Checked mobile viewport (375×812) rendering — panels and nav reflow
-  correctly, no horizontal overflow.
+- Did a real mobile audit (375×812), not just an eyeball check: walked
+  every view checking `scrollWidth` vs `clientWidth` across every
+  element via the console, not just looking at screenshots (one
+  screenshot-capture scale mismatch briefly looked like real text
+  clipping — DOM inspection showed it wasn't). Found and fixed three
+  genuine bugs this way: the nav tabs forcing the whole topbar ~70px
+  wider than the viewport (now a horizontally-scrollable strip with an
+  edge fade instead of an unwrapped row), button labels line-breaking
+  mid-text when squeezed (`white-space: nowrap` was simply missing), and
+  the device map showing light-gray bands instead of its dark background
+  wherever a view extended past loaded tiles (`leaflet.css`'s
+  `.leaflet-container { background: #ddd }` was winning over mine at
+  equal specificity — missing an `!important` I'd added everywhere else
+  Leaflet needed overriding). That last one affected desktop too, not
+  only mobile.
 - Ran `subscribe()` and `claim()` through the exact same `Client` +
   `AssembledTransaction` codepath `wallet/contracts.ts` uses, swapping
   Freighter's browser-only signer for a Node one (the extension itself
