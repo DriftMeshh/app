@@ -1,25 +1,42 @@
 # DriftMesh — App
 
-The frontend: a landing page plus a device browser and two lookup tools,
-reading live from `indexer`'s REST API. React + Vite + TypeScript, styled
-as a frosted-glass UI (blurred translucent panels over an animated
-gradient backdrop) with full light/dark support.
+The frontend: a landing page, a device browser with a map and readings
+chart, two lookup tools, and wallet-signed subscribe/claim — all reading
+live from `indexer`'s REST API and writing straight to the Stellar
+contracts via Freighter. React + Vite + TypeScript, styled as a
+frosted-glass UI (blurred translucent panels over an animated gradient
+backdrop) with full light/dark support.
 
 The landing page (`src/components/Landing.tsx`) pulls its device-count
 stats from the same live `GET /devices` endpoint the dashboard uses —
 not hardcoded marketing numbers. Clicking the brand mark in the
 dashboard's header returns to it.
 
-## Scope — read-only by design
+## Wallet integration
 
-This is deliberately a **read-only** dashboard for v1: browse registered
-devices and their readings/claims, look up a region's average, and check
-a subscription's status. There's no wallet-connect / register / subscribe
-flow yet — those are write operations that need a signing wallet
-(Freighter) in the browser, which is a meaningfully bigger scope and a
-different trust model than everything else here (this app never touches
-a private key). See "Suggested Stellar Wave issues" below; it's the
-natural next step, not an oversight.
+Connect a Freighter wallet (`src/wallet/`) to:
+- **Subscribe** — pay for feed access, from the Subscription tab
+- **Claim** — a device's own wallet can claim its payout for an epoch,
+  shown on that device's detail page only when the connected wallet
+  matches the device address
+
+`bindings/payment-streamer` and `bindings/subscription-market` are
+generated TypeScript clients (`stellar contract bindings typescript`),
+same approach as `device-sdk`'s bindings — see that repo's README for why.
+
+**Device registration deliberately isn't a wallet action here.** A real
+device's identity is its own keypair, not a human's browser wallet —
+that's `device-sdk`'s job, correctly separated. (Connecting your own
+wallet and "claiming" as if you were a device is still useful for demos
+and testing, which is why Claim works this way, but Register doesn't.)
+
+## Map and chart
+
+`DeviceMap.tsx` plots devices by their registered lat/lon (now populated
+by `indexer`'s enrichment fix) on a lightweight inline-SVG coordinate
+grid — deliberately not a tile-based map library, so there's no external
+tile-server dependency to keep reliable. `ReadingsChart.tsx` is a small
+inline-SVG line chart replacing the old bare number list in device detail.
 
 ## Running it
 
@@ -35,10 +52,14 @@ by default — see `vite.config.ts`. Point it elsewhere with
 non-proxied indexer URL.
 
 ```bash
-npm test          # 11 tests: component behavior + formatting helpers
+npm test          # 32 tests: component behavior, wallet flows (mocked), map, chart, formatting
 npm run typecheck
-npm run build      # production build to dist/
+npm run build      # builds bindings/* workspaces, then the app, to dist/
 ```
+
+For wallet write-flows to actually work (not just render), copy
+`.env.example` to `.env` and fill in the two contract IDs — see
+`contracts/TESTNET.md` for already-deployed testnet IDs.
 
 ## Verified against the live testnet deployment
 
@@ -66,16 +87,37 @@ building this:
   the actual on-chain expiry timestamp, correctly formatted.
 - Checked mobile viewport (375×812) rendering — panels and nav reflow
   correctly, no horizontal overflow.
+- Ran `subscribe()` and `claim()` through the exact same `Client` +
+  `AssembledTransaction` codepath `wallet/contracts.ts` uses, swapping
+  Freighter's browser-only signer for a Node one (the extension itself
+  can't be clicked through in a sandboxed browser) — both succeeded on
+  live testnet, confirmed by `indexer` picking up the resulting events.
+  This proves the contract-calling logic is correct; Freighter's own
+  connect/sign popups are covered by unit tests with mocks instead, not
+  a literal extension click — that gap is real and worth knowing about.
+- Registered a device, confirmed its exact coordinates appeared as a
+  pin on the map, submitted more readings, and confirmed the chart
+  rendered the correct min/max range from real on-chain values.
 
 ## Known limitations
 
-- **Read-only** — see Scope above.
 - **No pagination** — `GET /devices` and the readings list have no
   pagination yet (matches the same gap noted in `indexer`'s own README);
   fine for a demo, not for a device fleet of any real size.
-- **No live/auto-refresh** — the device list and detail views fetch once
-  on mount; there's no polling or websocket to reflect new on-chain
-  activity without a manual reload.
+- **No live/auto-refresh** — views fetch once on mount; there's no
+  polling or websocket to reflect new on-chain activity without a
+  manual reload (a wallet action does prompt the user that the indexer
+  may take a few seconds to catch up, but doesn't auto-refresh for them).
+- **Freighter's connect/sign flow is unit-tested with mocks, not
+  click-tested through the real extension** — see "Verified against the
+  live testnet deployment" above for exactly what was and wasn't covered.
+- **The device map is a coordinate grid, not a real map** — deliberately,
+  to avoid a tile-server dependency (see "Map and chart" above), but it
+  means no real-world landmass context, just lat/lon gridlines.
+- **Claim only works when the connected wallet IS the device** — correct
+  for the current architecture (see "Wallet integration" above) but
+  means an "operator" who manages multiple devices from one wallet can't
+  claim on a device's behalf yet.
 - **Device type capitalized via CSS only** (`text-transform: capitalize`
   on whatever string the contract stores) — fine for `weather`/
   `air_quality`, but any future device type with its own required casing
@@ -87,12 +129,14 @@ building this:
 - Add a manual "Refresh" button to each view instead of only fetching on mount
 - Show a relative time ("2m ago") next to readings/claims instead of only an absolute timestamp
 - Add an empty/loading skeleton instead of plain text for a more polished first paint
+- Add a `WatchWalletChanges` listener (from `@stellar/freighter-api`) so the UI reacts if the user switches accounts in the extension
 
 **Medium**
 - Add pagination controls to the device list and readings table
 - Add a lightweight auto-refresh (poll the indexer every N seconds) for the currently-open device
-- Add a simple map view for device locations (once `indexer`'s owner/lat/lon enrichment issue is resolved)
+- Let a device's `owner` wallet claim on the device's behalf, not only the device's own wallet
+- Swap the coordinate-grid map for a real tile-based map once a tile source is settled on
 
 **High**
-- Add Freighter wallet integration: connect wallet, register a device, subscribe — turning this from a read-only dashboard into the full consumer-facing app
-- Build an operator earnings view: total claimed across epochs, a claim button wired to `payment-streamer.claim` via the wallet
+- Add a Register-device flow via `device-sdk` triggered from the app (e.g. a QR code or paired-device flow) rather than CLI-only
+- Build a fuller operator dashboard: total earnings across all epochs/devices an owner controls, not just one epoch at a time
