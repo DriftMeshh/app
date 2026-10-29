@@ -8,6 +8,15 @@ import { renderWithProviders as render } from './testUtils';
 vi.mock('../src/api/client', () => ({
   api: { listDevices: vi.fn() },
 }));
+// Landing renders WalletButton in its topbar — stubbed directly (not
+// vi.importActual) so the real wallet kit module never loads; see
+// WalletButton.test.tsx for why.
+vi.mock('../src/wallet/kit', () => ({
+  connectWallet: vi.fn(),
+  disconnectWallet: vi.fn(),
+  signTransaction: vi.fn(),
+  signAuthEntry: vi.fn(),
+}));
 
 beforeEach(() => {
   vi.mocked(api.listDevices).mockReset();

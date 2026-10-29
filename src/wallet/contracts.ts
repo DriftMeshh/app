@@ -1,7 +1,7 @@
 import { Client as SubscriptionMarketClient } from 'subscription-market';
 import { Client as PaymentStreamerClient } from 'payment-streamer';
 import { stellarConfig } from '../stellarConfig';
-import { signTransaction, signAuthEntry } from './freighter';
+import { signTransaction, signAuthEntry } from './kit';
 
 function baseOptions(address: string) {
   return {

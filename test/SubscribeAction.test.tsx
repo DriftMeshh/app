@@ -2,16 +2,17 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { SubscribeAction } from '../src/components/SubscribeAction';
 import { WalletButton } from '../src/components/WalletButton';
-import { connectWallet } from '../src/wallet/freighter';
+import { connectWallet } from '../src/wallet/kit';
 import { subscribe } from '../src/wallet/contracts';
 import { renderWithProviders as render } from './testUtils';
 
-vi.mock('../src/wallet/freighter', async () => {
-  const actual = await vi.importActual<typeof import('../src/wallet/freighter')>(
-    '../src/wallet/freighter',
-  );
-  return { ...actual, connectWallet: vi.fn() };
-});
+// Stubbed directly, not vi.importActual — see WalletButton.test.tsx for why.
+vi.mock('../src/wallet/kit', () => ({
+  connectWallet: vi.fn(),
+  disconnectWallet: vi.fn(),
+  signTransaction: vi.fn(),
+  signAuthEntry: vi.fn(),
+}));
 vi.mock('../src/wallet/contracts', () => ({ subscribe: vi.fn(), claim: vi.fn() }));
 
 beforeEach(() => {

@@ -1,12 +1,11 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
-import { connectWallet } from './freighter';
+import { connectWallet, disconnectWallet } from './kit';
 
 interface WalletState {
   address: string | null;
   connecting: boolean;
   error: string | null;
   connect: () => Promise<void>;
-  /** Clears the locally-remembered address. Doesn't revoke Freighter's own site permission — that's controlled from the extension. */
   disconnect: () => void;
 }
 
@@ -33,6 +32,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const disconnect = useCallback(() => {
     setAddress(null);
     setError(null);
+    void disconnectWallet();
   }, []);
 
   return (

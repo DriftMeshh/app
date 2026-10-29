@@ -1,15 +1,19 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { WalletButton } from '../src/components/WalletButton';
-import { connectWallet } from '../src/wallet/freighter';
+import { connectWallet } from '../src/wallet/kit';
 import { renderWithProviders as render } from './testUtils';
 
-vi.mock('../src/wallet/freighter', async () => {
-  const actual = await vi.importActual<typeof import('../src/wallet/freighter')>(
-    '../src/wallet/freighter',
-  );
-  return { ...actual, connectWallet: vi.fn() };
-});
+// Stubbed directly (not vi.importActual) so the real module never loads in
+// tests — it pulls in the wallet kit's Freighter module, which has a CJS
+// dependency that trips up Vitest's Node-based module loader. None of these
+// tests need the real implementation since only connectWallet is exercised.
+vi.mock('../src/wallet/kit', () => ({
+  connectWallet: vi.fn(),
+  disconnectWallet: vi.fn(),
+  signTransaction: vi.fn(),
+  signAuthEntry: vi.fn(),
+}));
 
 beforeEach(() => {
   vi.mocked(connectWallet).mockReset();
