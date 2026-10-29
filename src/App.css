@@ -239,6 +239,167 @@ footer.note {
   user-select: none;
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.wallet-button-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.wallet-error {
+  font-size: 11px;
+  color: var(--danger);
+  max-width: 220px;
+  text-align: right;
+}
+
+.divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 20px 0 16px;
+}
+
+.subsection-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.claim-box {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+/* ---- Device map ---- */
+
+.map-wrap {
+  position: relative;
+}
+
+.device-map-svg {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  overflow: visible;
+}
+
+.map-bg {
+  fill: rgba(255, 255, 255, 0.04);
+}
+
+.map-grid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.map-grid-major {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+}
+
+.map-tick-label {
+  fill: var(--text-secondary);
+  font-size: 10px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+.map-pin {
+  cursor: pointer;
+}
+
+.map-pin-glow-active,
+.map-pin-glow-inactive {
+  opacity: 0.35;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.map-pin-glow-active {
+  fill: var(--success);
+}
+
+.map-pin-glow-inactive {
+  fill: var(--danger);
+}
+
+.map-pin-dot-active {
+  fill: var(--success);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.map-pin-dot-inactive {
+  fill: var(--danger);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.1;
+  }
+}
+
+.map-tooltip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+/* ---- Readings chart ---- */
+
+.chart-wrap {
+  margin: 4px 0 16px;
+}
+
+.readings-chart-svg {
+  width: 100%;
+  height: auto;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-point {
+  fill: var(--accent);
+}
+
+.chart-point-rejected {
+  fill: var(--danger);
+}
+
+.chart-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 0 4px;
+}
+
 /* ---- Landing page ---- */
 
 .landing {

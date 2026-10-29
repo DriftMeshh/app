@@ -1,5 +1,6 @@
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
+import { WalletButton } from './WalletButton';
 
 interface Props {
   onEnter: () => void;
@@ -38,9 +39,12 @@ export function Landing({ onEnter }: Props) {
           <span className="brand-mark" aria-hidden="true" />
           DriftMesh
         </div>
-        <button className="glass-button" onClick={onEnter}>
-          Open dashboard →
-        </button>
+        <div className="topbar-right">
+          <WalletButton />
+          <button className="glass-button" onClick={onEnter}>
+            Open dashboard →
+          </button>
+        </div>
       </header>
 
       <section className="hero">

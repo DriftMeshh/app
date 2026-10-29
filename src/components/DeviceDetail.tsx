@@ -2,6 +2,8 @@ import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { formatTimestamp, truncateAddress } from '../format';
 import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
+import { ClaimAction } from './ClaimAction';
+import { ReadingsChart } from './ReadingsChart';
 
 interface Props {
   address: string;
@@ -65,6 +67,7 @@ export function DeviceDetail({ address, onBack }: Props) {
           {readings.status === 'success' && readings.data.length === 0 && (
             <EmptyMessage label="No readings yet." />
           )}
+          {readings.status === 'success' && <ReadingsChart readings={readings.data} />}
           {readings.status === 'success' &&
             readings.data.map((reading) => (
               <div className="row" key={reading.id}>
@@ -100,6 +103,7 @@ export function DeviceDetail({ address, onBack }: Props) {
                 </div>
               </div>
             ))}
+          <ClaimAction deviceAddress={address} />
         </section>
       </div>
     </div>

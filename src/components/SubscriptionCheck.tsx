@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { api } from '../api/client';
 import type { SubscriptionStatus } from '../api/types';
 import { formatUnixSeconds } from '../format';
+import { SubscribeAction } from './SubscribeAction';
+import { useWallet } from '../wallet/WalletContext';
 
 export function SubscriptionCheck() {
+  const { address: walletAddress } = useWallet();
   const [address, setAddress] = useState('');
   const [result, setResult] = useState<SubscriptionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +47,15 @@ export function SubscriptionCheck() {
             placeholder="G… or C…"
           />
         </div>
+        {walletAddress && (
+          <button
+            type="button"
+            className="glass-button"
+            onClick={() => setAddress(walletAddress)}
+          >
+            Use my wallet
+          </button>
+        )}
         <button className="glass-button" type="submit" disabled={loading}>
           {loading ? 'Checking…' : 'Check'}
         </button>
@@ -65,6 +77,10 @@ export function SubscriptionCheck() {
           </div>
         </div>
       )}
+
+      <div className="divider" />
+      <h3 className="subsection-title">Subscribe</h3>
+      <SubscribeAction />
     </section>
   );
 }

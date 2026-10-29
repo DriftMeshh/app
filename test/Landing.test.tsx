@@ -1,8 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { Landing } from '../src/components/Landing';
 import { api } from '../src/api/client';
 import type { Device } from '../src/api/types';
+import { renderWithProviders as render } from './testUtils';
 
 vi.mock('../src/api/client', () => ({
   api: { listDevices: vi.fn() },

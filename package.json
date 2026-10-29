@@ -3,17 +3,23 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "bindings/*"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run build --workspaces --if-present && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@stellar/freighter-api": "^6.0.1",
+    "payment-streamer": "*",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "subscription-market": "*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

@@ -3,10 +3,12 @@ import './App.css';
 import { Landing } from './components/Landing';
 import { DeviceList } from './components/DeviceList';
 import { DeviceDetail } from './components/DeviceDetail';
+import { DeviceMap } from './components/DeviceMap';
 import { RegionLookup } from './components/RegionLookup';
 import { SubscriptionCheck } from './components/SubscriptionCheck';
+import { WalletButton } from './components/WalletButton';
 
-type Tab = 'devices' | 'region' | 'subscription';
+type Tab = 'devices' | 'map' | 'region' | 'subscription';
 type View = 'landing' | 'app';
 
 function App() {
@@ -41,29 +43,39 @@ function App() {
           <span className="brand-mark" aria-hidden="true" />
           DriftMesh
         </div>
-        <nav className="glass nav-tabs">
-          <button
-            className="glass-button"
-            aria-pressed={tab === 'devices'}
-            onClick={() => selectTab('devices')}
-          >
-            Devices
-          </button>
-          <button
-            className="glass-button"
-            aria-pressed={tab === 'region'}
-            onClick={() => selectTab('region')}
-          >
-            Region lookup
-          </button>
-          <button
-            className="glass-button"
-            aria-pressed={tab === 'subscription'}
-            onClick={() => selectTab('subscription')}
-          >
-            Subscription
-          </button>
-        </nav>
+        <div className="topbar-right">
+          <nav className="glass nav-tabs">
+            <button
+              className="glass-button"
+              aria-pressed={tab === 'devices'}
+              onClick={() => selectTab('devices')}
+            >
+              Devices
+            </button>
+            <button
+              className="glass-button"
+              aria-pressed={tab === 'map'}
+              onClick={() => selectTab('map')}
+            >
+              Map
+            </button>
+            <button
+              className="glass-button"
+              aria-pressed={tab === 'region'}
+              onClick={() => selectTab('region')}
+            >
+              Region lookup
+            </button>
+            <button
+              className="glass-button"
+              aria-pressed={tab === 'subscription'}
+              onClick={() => selectTab('subscription')}
+            >
+              Subscription
+            </button>
+          </nav>
+          <WalletButton />
+        </div>
       </header>
 
       <main className="page">
@@ -73,6 +85,14 @@ function App() {
           ) : (
             <DeviceList onSelect={setSelectedDevice} />
           ))}
+        {tab === 'map' && (
+          <DeviceMap
+            onSelect={(address) => {
+              setTab('devices');
+              setSelectedDevice(address);
+            }}
+          />
+        )}
         {tab === 'region' && <RegionLookup />}
         {tab === 'subscription' && <SubscriptionCheck />}
       </main>
