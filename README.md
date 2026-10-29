@@ -43,11 +43,16 @@ and testing, which is why Claim works this way, but Register doesn't.)
 
 ## Map and chart
 
-`DeviceMap.tsx` plots devices by their registered lat/lon (now populated
-by `indexer`'s enrichment fix) on a lightweight inline-SVG coordinate
-grid — deliberately not a tile-based map library, so there's no external
-tile-server dependency to keep reliable. `ReadingsChart.tsx` is a small
-inline-SVG line chart replacing the old bare number list in device detail.
+`DeviceMap.tsx` plots devices by their registered lat/lon (populated by
+`indexer`'s enrichment fix) on a real Leaflet tile map, auto-framed to
+fit whatever devices are currently located. Tiles are plain
+OpenStreetMap (`tile.openstreetmap.org`) — genuinely free, no API key —
+with a CSS filter on just the tile pane approximating a dark basemap
+(found live that CARTO's free dark tiles now require an API key, a
+policy change since this was first written; markers/popups sit in
+separate Leaflet panes so the filter doesn't touch them). `ReadingsChart.tsx`
+is a small inline-SVG line chart replacing the old bare number list in
+device detail.
 
 ## Running it
 
@@ -109,6 +114,16 @@ building this:
 - Registered a device, confirmed its exact coordinates appeared as a
   pin on the map, submitted more readings, and confirmed the chart
   rendered the correct min/max range from real on-chain values.
+- Registered three devices in London, Tokyo, and Sydney and confirmed
+  the real Leaflet tile map auto-framed to fit all three at their
+  correct real-world positions, with working popups and click-through
+  to each device's detail page — this is also how the CARTO
+  API-key issue above was caught, not assumed away.
+- While testing this, the live indexer actually crashed (an unhandled
+  `ECONNRESET` talking to Stellar RPC took the whole process down) —
+  fixed with global `unhandledRejection`/`uncaughtException` handlers in
+  `indexer`'s `index.ts` so a transient network blip logs instead of
+  killing a long-running service; see that repo's commit history.
 
 ## Known limitations
 
@@ -126,9 +141,9 @@ building this:
   Albedo/Rabet correctly, was visually confirmed; actually connecting
   through one wasn't, since none of those extensions are installed in
   the sandboxed browser used for development).
-- **The device map is a coordinate grid, not a real map** — deliberately,
-  to avoid a tile-server dependency (see "Map and chart" above), but it
-  means no real-world landmass context, just lat/lon gridlines.
+- **Map tiles depend on a free, unauthenticated third-party service**
+  (OpenStreetMap) — fine for a demo, but no uptime/rate-limit guarantee;
+  a production deployment would want a paid tile provider.
 - **Claim only works when the connected wallet IS the device** — correct
   for the current architecture (see "Wallet integration" above) but
   means an "operator" who manages multiple devices from one wallet can't
@@ -150,7 +165,7 @@ building this:
 - Add pagination controls to the device list and readings table
 - Add a lightweight auto-refresh (poll the indexer every N seconds) for the currently-open device
 - Let a device's `owner` wallet claim on the device's behalf, not only the device's own wallet
-- Swap the coordinate-grid map for a real tile-based map once a tile source is settled on
+- Move map tiles to a paid/rate-limited provider (or a self-hosted tile server) before any real deployment
 
 **High**
 - Add a Register-device flow via `device-sdk` triggered from the app (e.g. a QR code or paired-device flow) rather than CLI-only

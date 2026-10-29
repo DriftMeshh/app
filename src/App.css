@@ -277,92 +277,114 @@ footer.note {
   padding: 16px;
 }
 
-/* ---- Device map ---- */
+/* ---- Device map (real tiles via Leaflet) ---- */
 
-.map-wrap {
-  position: relative;
-}
-
-.device-map-svg {
-  width: 100%;
-  height: auto;
+.leaflet-wrap {
   border-radius: var(--radius-md);
-  overflow: visible;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
 }
 
-.map-bg {
-  fill: rgba(255, 255, 255, 0.04);
+.device-leaflet-map {
+  width: 100%;
+  height: 420px;
+  background: #0b0e14;
 }
 
-.map-grid {
-  stroke: rgba(255, 255, 255, 0.08);
-  stroke-width: 1;
-}
-
-.map-grid-major {
-  stroke: rgba(255, 255, 255, 0.18);
-  stroke-width: 1;
-}
-
-.map-tick-label {
-  fill: var(--text-secondary);
-  font-size: 10px;
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-}
-
-.map-pin {
-  cursor: pointer;
-}
-
-.map-pin-glow-active,
-.map-pin-glow-inactive {
-  opacity: 0.35;
-  animation: pulse 2.4s ease-in-out infinite;
-}
-
-.map-pin-glow-active {
-  fill: var(--success);
-}
-
-.map-pin-glow-inactive {
-  fill: var(--danger);
-}
-
-.map-pin-dot-active {
-  fill: var(--success);
-  stroke: #fff;
-  stroke-width: 1.5;
-}
-
-.map-pin-dot-inactive {
-  fill: var(--danger);
-  stroke: #fff;
-  stroke-width: 1.5;
+/* Plain OpenStreetMap tiles (genuinely free, no API key — CARTO's free
+   dark tiles now gate behind one, discovered by actually loading this in
+   a browser rather than assuming). Filtering the tile pane approximates a
+   dark basemap without needing a paid/keyed tile source; markers and
+   popups live in separate Leaflet panes so this filter doesn't touch them. */
+.device-leaflet-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.6) contrast(0.9);
 }
 
 @keyframes pulse {
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.35;
+    opacity: 0.4;
   }
   50% {
-    transform: scale(1.6);
-    opacity: 0.1;
+    transform: scale(1.8);
+    opacity: 0.05;
   }
 }
 
-.map-tooltip {
+/* The marker is a DivIcon (see DeviceMap.tsx) so these are plain HTML/CSS,
+   not SVG — box-shadow stands in for the SVG glow-circle this replaces. */
+.leaflet-pin {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.leaflet-pin-active {
+  background: var(--success);
+}
+
+.leaflet-pin-inactive {
+  background: var(--danger);
+}
+
+.leaflet-pin-glow {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
+  inset: -7px;
+  border-radius: 50%;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.leaflet-pin-active .leaflet-pin-glow {
+  background: var(--success);
+}
+
+.leaflet-pin-inactive .leaflet-pin-glow {
+  background: var(--danger);
+}
+
+/* Leaflet ships its own light-themed chrome (popups, zoom buttons,
+   attribution) — overridden here to match the app's dark glass look
+   rather than clashing with it. !important guards against load-order
+   mattering relative to leaflet's own stylesheet. */
+.leaflet-popup-content-wrapper {
+  background: rgba(20, 22, 32, 0.92) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(12px);
+}
+
+.leaflet-popup-tip {
+  background: rgba(20, 22, 32, 0.92) !important;
+}
+
+.leaflet-popup-content {
   font-size: 13px;
-  pointer-events: none;
+  line-height: 1.5;
+  margin: 10px 14px;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(20, 22, 32, 0.85) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(10, 12, 18, 0.6) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.leaflet-control-attribution a {
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* ---- Readings chart ---- */
