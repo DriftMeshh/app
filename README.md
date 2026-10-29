@@ -3,9 +3,9 @@
 The frontend: a landing page, a device browser with a map and readings
 chart, two lookup tools, and wallet-signed subscribe/claim — all reading
 live from `indexer`'s REST API and writing straight to the Stellar
-contracts via Freighter. React + Vite + TypeScript, styled as a
-frosted-glass UI (blurred translucent panels over an animated gradient
-backdrop) with full light/dark support.
+contracts through any supported wallet. React + Vite + TypeScript,
+styled as a frosted-glass UI (blurred translucent panels over an
+animated gradient backdrop) with full light/dark support.
 
 The landing page (`src/components/Landing.tsx`) pulls its device-count
 stats from the same live `GET /devices` endpoint the dashboard uses —
@@ -14,7 +14,15 @@ dashboard's header returns to it.
 
 ## Wallet integration
 
-Connect a Freighter wallet (`src/wallet/`) to:
+"Connect wallet" (`src/wallet/kit.ts`) opens [Stellar Wallets
+Kit](https://stellarwalletskit.dev/)'s picker — currently configured for
+**Freighter** (rebranded "Varial" upstream; still exposed via a
+`/modules/freighter` import alias, kept in our own code for clarity),
+**Lobstr**, **xBull**, **Albedo**, and **Rabet**. Adding another
+supported wallet is a one-line change in `kit.ts`'s `modules` list, not
+a new integration from scratch.
+
+Once connected, a wallet can:
 - **Subscribe** — pay for feed access, from the Subscription tab
 - **Claim** — a device's own wallet can claim its payout for an epoch,
   shown on that device's detail page only when the connected wallet
@@ -23,6 +31,9 @@ Connect a Freighter wallet (`src/wallet/`) to:
 `bindings/payment-streamer` and `bindings/subscription-market` are
 generated TypeScript clients (`stellar contract bindings typescript`),
 same approach as `device-sdk`'s bindings — see that repo's README for why.
+The kit's `signTransaction`/`signAuthEntry` slot into these clients the
+same way `device-sdk`'s Node-based signer does; only the signer source
+changes between the two.
 
 **Device registration deliberately isn't a wallet action here.** A real
 device's identity is its own keypair, not a human's browser wallet —
@@ -108,9 +119,13 @@ building this:
   polling or websocket to reflect new on-chain activity without a
   manual reload (a wallet action does prompt the user that the indexer
   may take a few seconds to catch up, but doesn't auto-refresh for them).
-- **Freighter's connect/sign flow is unit-tested with mocks, not
-  click-tested through the real extension** — see "Verified against the
-  live testnet deployment" above for exactly what was and wasn't covered.
+- **The wallet picker and connect/sign flow are unit-tested with mocks,
+  not click-tested through any real wallet extension** — see "Verified
+  against the live testnet deployment" above for exactly what was and
+  wasn't covered (the picker itself, listing Freighter/Lobstr/xBull/
+  Albedo/Rabet correctly, was visually confirmed; actually connecting
+  through one wasn't, since none of those extensions are installed in
+  the sandboxed browser used for development).
 - **The device map is a coordinate grid, not a real map** — deliberately,
   to avoid a tile-server dependency (see "Map and chart" above), but it
   means no real-world landmass context, just lat/lon gridlines.
