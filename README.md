@@ -172,7 +172,7 @@ building this:
 - Add a manual "Refresh" button to each view instead of only fetching on mount
 - Show a relative time ("2m ago") next to readings/claims instead of only an absolute timestamp
 - Add an empty/loading skeleton instead of plain text for a more polished first paint
-- Add a `WatchWalletChanges` listener (from `@stellar/freighter-api`) so the UI reacts if the user switches accounts in the extension
+- Detect an account switch in the connected wallet extension (the app no longer depends on `@stellar/freighter-api` directly — `src/wallet/kit.ts`'s `StellarWalletsKit` wrapper exposes `getAddress()`/`authModal()` but no push-based account-changed event — so this means polling `getAddress()` on an interval while connected and updating `WalletContext` if it no longer matches the stored address, not wiring up an event listener that doesn't exist in the current wallet layer)
 
 **Medium**
 - Add pagination controls to the device list and readings table
