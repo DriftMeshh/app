@@ -12,13 +12,12 @@ export function SubscriptionCheck() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function fetchSubscription(addr: string) {
     setError(null);
     setResult(null);
     setLoading(true);
     try {
-      const data = await api.getSubscription(address.trim());
+      const data = await api.getSubscription(addr.trim());
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -27,11 +26,29 @@ export function SubscriptionCheck() {
     }
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await fetchSubscription(address);
+  }
+
   return (
     <section className="glass panel">
       <div className="panel-header">
         <h2>Subscription status</h2>
-        <span className="muted">Check whether an address has active feed access</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="muted">Check whether an address has active feed access</span>
+          {result && (
+            <button
+              className="glass-button"
+              onClick={() => fetchSubscription(address)}
+              disabled={loading}
+              aria-label="Refresh subscription status"
+              style={{ padding: '4px 12px', fontSize: 13 }}
+            >
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          )}
+        </div>
       </div>
 
       <form className="lookup-form" onSubmit={handleSubmit}>
