@@ -88,10 +88,14 @@ doesn't exist in a static deployment, so you must set `VITE_API_BASE`
 in Vercel's project environment variables to the `indexer`'s real
 public URL (e.g. `https://your-indexer.example.com`) before building —
 otherwise every API call 404s against Vercel's own domain instead of
-reaching the indexer. The `indexer` itself needs separate hosting
-(Render, Fly.io, Railway, or similar) — it's a long-running Node
-process with a background poller and a SQLite file, not a fit for
-Vercel's serverless functions. The indexer's CORS header (`Access-
+reaching the indexer. The `indexer` itself needs separate hosting —
+it's a long-running Node process with a background poller and a
+SQLite file, not a fit for Vercel's serverless functions. The
+`indexer` repo's `render.yaml` is a ready-to-use
+[Render](https://render.com) blueprint for exactly this; see that
+repo's README "Deploying" section for the one real caveat (its free
+plan's disk is ephemeral, so data resets on redeploy). The indexer's
+CORS header (`Access-
 Control-Allow-Origin: *`, added in the `indexer` repo's
 `src/api/app.ts`) is what lets a frontend on a different origin like
 Vercel call it at all.
