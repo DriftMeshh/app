@@ -9,13 +9,12 @@ export function RegionLookup() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function fetchAverage(rc: string, ep: string) {
     setError(null);
     setResult(null);
     setLoading(true);
     try {
-      const data = await api.getRegionAverage(Number(regionCode), Number(epoch));
+      const data = await api.getRegionAverage(Number(rc), Number(ep));
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -24,11 +23,29 @@ export function RegionLookup() {
     }
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await fetchAverage(regionCode, epoch);
+  }
+
   return (
     <section className="glass panel">
       <div className="panel-header">
         <h2>Region average</h2>
-        <span className="muted">Computed live from accepted readings</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="muted">Computed live from accepted readings</span>
+          {result && (
+            <button
+              className="glass-button"
+              onClick={() => fetchAverage(regionCode, epoch)}
+              disabled={loading}
+              aria-label="Refresh region average"
+              style={{ padding: '4px 12px', fontSize: 13 }}
+            >
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          )}
+        </div>
       </div>
 
       <form className="lookup-form" onSubmit={handleSubmit}>

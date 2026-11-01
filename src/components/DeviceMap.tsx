@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -46,7 +46,8 @@ interface Props {
 }
 
 export function DeviceMap({ onSelect }: Props) {
-  const state = useAsync(() => api.listDevices(), []);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const state = useAsync(() => api.listDevices(), [refreshKey]);
   const activeIcon = useMemo(() => makePinIcon(true), []);
   const inactiveIcon = useMemo(() => makePinIcon(false), []);
 
@@ -60,7 +61,18 @@ export function DeviceMap({ onSelect }: Props) {
     <section className="glass panel">
       <div className="panel-header">
         <h2>Device map</h2>
-        <span className="muted">Plotted from each device's registered coordinates</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="muted">Plotted from each device's registered coordinates</span>
+          <button
+            className="glass-button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            disabled={state.status === 'loading'}
+            aria-label="Refresh device map"
+            style={{ padding: '4px 12px', fontSize: 13 }}
+          >
+            {state.status === 'loading' ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {state.status === 'loading' && <LoadingMessage label="Fetching devices…" />}

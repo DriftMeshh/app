@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { truncateAddress } from '../format';
@@ -8,13 +9,25 @@ interface Props {
 }
 
 export function DeviceList({ onSelect }: Props) {
-  const state = useAsync(() => api.listDevices(), []);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const state = useAsync(() => api.listDevices(), [refreshKey]);
 
   return (
     <section className="glass panel">
       <div className="panel-header">
         <h2>Registered devices</h2>
-        <span className="muted">Live from the indexer</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="muted">Live from the indexer</span>
+          <button
+            className="glass-button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            disabled={state.status === 'loading'}
+            aria-label="Refresh device list"
+            style={{ padding: '4px 12px', fontSize: 13 }}
+          >
+            {state.status === 'loading' ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {state.status === 'loading' && <LoadingMessage label="Fetching devices…" />}

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { formatTimestamp, truncateAddress } from '../format';
@@ -11,9 +12,13 @@ interface Props {
 }
 
 export function DeviceDetail({ address, onBack }: Props) {
-  const device = useAsync(() => api.getDevice(address), [address]);
-  const readings = useAsync(() => api.getReadings(address, 20), [address]);
-  const claims = useAsync(() => api.getClaims(address), [address]);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const device = useAsync(() => api.getDevice(address), [address, refreshKey]);
+  const readings = useAsync(() => api.getReadings(address, 20), [address, refreshKey]);
+  const claims = useAsync(() => api.getClaims(address), [address, refreshKey]);
+
+  const isRefreshing =
+    device.status === 'loading' || readings.status === 'loading' || claims.status === 'loading';
 
   return (
     <div className="page">
@@ -24,6 +29,15 @@ export function DeviceDetail({ address, onBack }: Props) {
       <section className="glass panel">
         <div className="panel-header">
           <h2>{truncateAddress(address, 10, 10)}</h2>
+          <button
+            className="glass-button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            disabled={isRefreshing}
+            aria-label="Refresh device details"
+            style={{ padding: '4px 12px', fontSize: 13 }}
+          >
+            {isRefreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
         {device.status === 'loading' && <LoadingMessage />}
         {device.status === 'error' && <ErrorMessage message={device.error} />}
