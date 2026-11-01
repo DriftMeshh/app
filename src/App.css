@@ -37,13 +37,10 @@
   flex-shrink: 0;
 }
 
-.brand-mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--bg-1), var(--bg-3));
-  box-shadow: 0 4px 14px rgba(79, 124, 255, 0.45);
+.brand svg {
   flex-shrink: 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(79, 124, 255, 0.45);
 }
 
 /* A horizontally-scrolling pill strip rather than a row that wraps or

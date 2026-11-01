@@ -1,5 +1,6 @@
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
+import { Logo } from './Logo';
 import { WalletButton } from './WalletButton';
 
 interface Props {
@@ -36,7 +37,7 @@ export function Landing({ onEnter }: Props) {
 
       <header className="glass topbar landing-topbar">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true" />
+          <Logo />
           DriftMesh
         </div>
         <div className="topbar-right">

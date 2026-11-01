@@ -4,6 +4,7 @@ import { Landing } from './components/Landing';
 import { DeviceList } from './components/DeviceList';
 import { DeviceDetail } from './components/DeviceDetail';
 import { DeviceMap } from './components/DeviceMap';
+import { Logo } from './components/Logo';
 import { RegionLookup } from './components/RegionLookup';
 import { SubscriptionCheck } from './components/SubscriptionCheck';
 import { WalletButton } from './components/WalletButton';
@@ -41,7 +42,7 @@ function App() {
             tabIndex={0}
             aria-label="Back to landing page"
           >
-            <span className="brand-mark" aria-hidden="true" />
+            <Logo />
             DriftMesh
           </div>
           <WalletButton />

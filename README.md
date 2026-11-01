@@ -77,6 +77,25 @@ For wallet write-flows to actually work (not just render), copy
 `.env.example` to `.env` and fill in the two contract IDs — see
 `contracts/TESTNET.md` for already-deployed testnet IDs.
 
+## Deploying
+
+This is a static Vite app — Vercel's Vite preset (`npm run build`,
+output `dist/`) works with no extra config, and there's no
+client-side router, so no SPA rewrite rules are needed either.
+
+What *is* required: the dev-only `/api/*` proxy (`vite.config.ts`)
+doesn't exist in a static deployment, so you must set `VITE_API_BASE`
+in Vercel's project environment variables to the `indexer`'s real
+public URL (e.g. `https://your-indexer.example.com`) before building —
+otherwise every API call 404s against Vercel's own domain instead of
+reaching the indexer. The `indexer` itself needs separate hosting
+(Render, Fly.io, Railway, or similar) — it's a long-running Node
+process with a background poller and a SQLite file, not a fit for
+Vercel's serverless functions. The indexer's CORS header (`Access-
+Control-Allow-Origin: *`, added in the `indexer` repo's
+`src/api/app.ts`) is what lets a frontend on a different origin like
+Vercel call it at all.
+
 ## Verified against the live testnet deployment
 
 Not a mockup — run against the real indexer, which was itself polling
