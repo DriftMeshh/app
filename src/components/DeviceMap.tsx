@@ -10,6 +10,35 @@ import type { Device } from '../api/types';
 
 type LocatedDevice = Device & { lat: number; lon: number };
 
+// Optional — when unset, falls back to plain OpenStreetMap tiles (see
+// below) so the map still works with zero setup. When set, uses Mapbox's
+// own dark style directly instead of faking one with a CSS filter over
+// OSM tiles, and moves off an unauthenticated third-party tile host before
+// any real deployment (see app/README.md's known limitations).
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+const TILE_CONFIG = MAPBOX_TOKEN
+  ? {
+      // Raster tiles from a Mapbox *style* (not the legacy classic tile
+      // API) — {tileSize}/{z}/{x}/{y}{@2x} is the documented raster
+      // endpoint for a style; 512px tiles need zoomOffset=-1 to line up
+      // with Leaflet's 256px zoom levels.
+      url: `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+      attribution:
+        '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      tileSize: 512,
+      zoomOffset: -1,
+      osmFallback: false,
+    }
+  : {
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      tileSize: 256,
+      zoomOffset: 0,
+      osmFallback: true,
+    };
+
 function toLatLng(device: LocatedDevice): [number, number] {
   return [device.lat / 10_000, device.lon / 10_000];
 }
@@ -88,11 +117,13 @@ export function DeviceMap({ onSelect }: Props) {
               center={[20, 0]}
               zoom={2}
               scrollWheelZoom
-              className="device-leaflet-map"
+              className={`device-leaflet-map${TILE_CONFIG.osmFallback ? ' osm-fallback' : ''}`}
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution={TILE_CONFIG.attribution}
+                url={TILE_CONFIG.url}
+                tileSize={TILE_CONFIG.tileSize}
+                zoomOffset={TILE_CONFIG.zoomOffset}
               />
               <FitToDevices devices={located} />
               {located.map((device) => (

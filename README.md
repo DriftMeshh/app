@@ -45,14 +45,17 @@ and testing, which is why Claim works this way, but Register doesn't.)
 
 `DeviceMap.tsx` plots devices by their registered lat/lon (populated by
 `indexer`'s enrichment fix) on a real Leaflet tile map, auto-framed to
-fit whatever devices are currently located. Tiles are plain
-OpenStreetMap (`tile.openstreetmap.org`) — genuinely free, no API key —
-with a CSS filter on just the tile pane approximating a dark basemap
-(found live that CARTO's free dark tiles now require an API key, a
-policy change since this was first written; markers/popups sit in
-separate Leaflet panes so the filter doesn't touch them). `ReadingsChart.tsx`
-is a small inline-SVG line chart replacing the old bare number list in
-device detail.
+fit whatever devices are currently located. Tiles come from
+[Mapbox](https://www.mapbox.com/)'s `dark-v11` style when
+`VITE_MAPBOX_TOKEN` is set (a free account's public token — safe to
+expose in frontend code, unlike a secret key); with no token set it
+falls back to plain OpenStreetMap (`tile.openstreetmap.org`) — genuinely
+free, no API key — with a CSS filter on just the tile pane approximating
+a dark basemap (found live that CARTO's free dark tiles now require an
+API key, a policy change since this was first written; markers/popups
+sit in separate Leaflet panes so the filter doesn't touch them either
+way). `ReadingsChart.tsx` is a small inline-SVG line chart replacing the
+old bare number list in device detail.
 
 ## Running it
 
@@ -88,7 +91,11 @@ doesn't exist in a static deployment, so you must set `VITE_API_BASE`
 in Vercel's project environment variables to the `indexer`'s real
 public URL (e.g. `https://your-indexer.example.com`) before building —
 otherwise every API call 404s against Vercel's own domain instead of
-reaching the indexer. The `indexer` itself needs separate hosting —
+reaching the indexer. Also set `VITE_MAPBOX_TOKEN` there if you want the
+device map's real dark basemap instead of the OSM-with-CSS-filter
+fallback — it's a public token, so it's fine to set directly in Vercel's
+dashboard rather than treating it like a secret. The `indexer` itself
+needs separate hosting —
 it's a long-running Node process with a background poller and a
 SQLite file, not a fit for Vercel's serverless functions. The
 `indexer` repo's `render.yaml` is a ready-to-use
@@ -178,9 +185,12 @@ building this:
   Albedo/Rabet correctly, was visually confirmed; actually connecting
   through one wasn't, since none of those extensions are installed in
   the sandboxed browser used for development).
-- **Map tiles depend on a free, unauthenticated third-party service**
-  (OpenStreetMap) — fine for a demo, but no uptime/rate-limit guarantee;
-  a production deployment would want a paid tile provider.
+- **Map tiles fall back to a free, unauthenticated third-party service**
+  (OpenStreetMap) when `VITE_MAPBOX_TOKEN` isn't set — fine for a demo,
+  but no uptime/rate-limit guarantee. Setting the token switches to
+  Mapbox, which is the paid-tier-capable provider this used to call for;
+  Mapbox's own free tier (50k map loads/month) still applies no-cost for
+  a project this size.
 - **Claim only works when the connected wallet IS the device** — correct
   for the current architecture (see "Wallet integration" above) but
   means an "operator" who manages multiple devices from one wallet can't
@@ -202,7 +212,6 @@ building this:
 - Add pagination controls to the device list and readings table
 - Add a lightweight auto-refresh (poll the indexer every N seconds) for the currently-open device
 - Let a device's `owner` wallet claim on the device's behalf, not only the device's own wallet
-- Move map tiles to a paid/rate-limited provider (or a self-hosted tile server) before any real deployment
 
 **High**
 - Add a Register-device flow via `device-sdk` triggered from the app (e.g. a QR code or paired-device flow) rather than CLI-only

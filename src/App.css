@@ -337,12 +337,15 @@ footer.note {
   background: #0b0e14 !important;
 }
 
-/* Plain OpenStreetMap tiles (genuinely free, no API key — CARTO's free
-   dark tiles now gate behind one, discovered by actually loading this in
-   a browser rather than assuming). Filtering the tile pane approximates a
-   dark basemap without needing a paid/keyed tile source; markers and
-   popups live in separate Leaflet panes so this filter doesn't touch them. */
-.device-leaflet-map .leaflet-tile-pane {
+/* Only applied to the OSM fallback (no VITE_MAPBOX_TOKEN set — see
+   DeviceMap.tsx). Plain OpenStreetMap tiles are genuinely free with no API
+   key (CARTO's free dark tiles now gate behind one, discovered by actually
+   loading this in a browser rather than assuming), but they're only ever
+   a light basemap, so filtering the tile pane approximates a dark one;
+   markers and popups live in separate Leaflet panes so this filter doesn't
+   touch them. When a Mapbox token is set, DeviceMap.tsx uses Mapbox's own
+   `dark-v11` style instead, which needs no filter. */
+.device-leaflet-map.osm-fallback .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.6) contrast(0.9);
 }
 
