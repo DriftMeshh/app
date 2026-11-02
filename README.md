@@ -94,7 +94,8 @@ SQLite file, not a fit for Vercel's serverless functions. The
 `indexer` repo's `render.yaml` is a ready-to-use
 [Render](https://render.com) blueprint for exactly this; see that
 repo's README "Deploying" section for the one real caveat (its free
-plan's disk is ephemeral, so data resets on redeploy). The indexer's
+plan spins down — and resets its data — after just 15 minutes idle,
+not only on redeploy). The indexer's
 CORS header (`Access-
 Control-Allow-Origin: *`, added in the `indexer` repo's
 `src/api/app.ts`) is what lets a frontend on a different origin like
