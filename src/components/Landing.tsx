@@ -30,10 +30,7 @@ export function Landing({ onEnter }: Props) {
 
   return (
     <div className="landing">
-      <div className="backdrop">
-        <span className="blob-3" />
-        <span className="blob-4" />
-      </div>
+      <div className="backdrop" />
 
       <header className="glass topbar landing-topbar">
         <div className="brand">
@@ -64,14 +61,6 @@ export function Landing({ onEnter }: Props) {
           <button className="glass-button glass-button-primary" onClick={onEnter}>
             Explore the network
           </button>
-          <a
-            className="glass-button"
-            href="https://github.com/DriftMeshh"
-            target="_blank"
-            rel="noreferrer"
-          >
-            View on GitHub
-          </a>
         </div>
 
         <div className="hero-stats glass">

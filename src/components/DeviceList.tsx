@@ -1,16 +1,57 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
-import { truncateAddress } from '../format';
+import { truncateAddress, formatUnixSeconds } from '../format';
 import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
+import type { Device } from '../api/types';
 
 interface Props {
   onSelect: (address: string) => void;
 }
 
+type SortKey = 'address' | 'device_type' | 'active' | 'registered_at';
+type SortDir = 'asc' | 'desc';
+
+const COLUMNS: { key: SortKey; label: string }[] = [
+  { key: 'address', label: 'Device' },
+  { key: 'device_type', label: 'Type' },
+  { key: 'active', label: 'Status' },
+  { key: 'registered_at', label: 'Registered' },
+];
+
+function compare(a: Device, b: Device, key: SortKey): number {
+  if (key === 'active') return a.active - b.active;
+  if (key === 'registered_at') return a.registered_at - b.registered_at;
+  return String(a[key]).localeCompare(String(b[key]));
+}
+
 export function DeviceList({ onSelect }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [query, setQuery] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('registered_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const state = useAsync(() => api.listDevices(), [refreshKey]);
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  }
+
+  const visible = useMemo(() => {
+    if (state.status !== 'success') return [];
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? state.data.filter(
+          (d) => d.address.toLowerCase().includes(q) || d.device_type.toLowerCase().includes(q),
+        )
+      : state.data;
+    const sorted = [...filtered].sort((a, b) => compare(a, b, sortKey));
+    return sortDir === 'asc' ? sorted : sorted.reverse();
+  }, [state, query, sortKey, sortDir]);
 
   return (
     <section className="glass panel">
@@ -30,27 +71,66 @@ export function DeviceList({ onSelect }: Props) {
         </div>
       </div>
 
+      {state.status === 'success' && state.data.length > 0 && (
+        <div className="table-toolbar">
+          <input
+            className="glass-input"
+            placeholder="Search by address or type…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search devices"
+          />
+          <span className="muted">
+            {visible.length} of {state.data.length}
+          </span>
+        </div>
+      )}
+
       {state.status === 'loading' && <LoadingMessage label="Fetching devices…" />}
       {state.status === 'error' && <ErrorMessage message={state.error} />}
       {state.status === 'success' && state.data.length === 0 && (
         <EmptyMessage label="No devices indexed yet. Register one with device-sdk and it'll show up here." />
       )}
-      {state.status === 'success' && state.data.length > 0 && (
-        <div className="device-grid">
-          {state.data.map((device) => (
-            <button
-              key={device.address}
-              className="glass device-card"
-              onClick={() => onSelect(device.address)}
-              aria-label={`View device ${device.address}`}
-            >
-              <span className={`pill ${device.active ? 'pill-success' : 'pill-danger'}`}>
-                {device.active ? 'Active' : 'Inactive'}
-              </span>
-              <span className="type">{device.device_type}</span>
-              <span className="addr">{truncateAddress(device.address, 8, 8)}</span>
-            </button>
-          ))}
+      {state.status === 'success' && state.data.length > 0 && visible.length === 0 && (
+        <EmptyMessage label="No devices match that search." />
+      )}
+      {state.status === 'success' && visible.length > 0 && (
+        <div className="device-table-wrap">
+          <table className="device-table">
+            <thead>
+              <tr>
+                {COLUMNS.map((col) => (
+                  <th key={col.key} onClick={() => toggleSort(col.key)}>
+                    {col.label}
+                    {sortKey === col.key && (
+                      <span className="sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((device) => (
+                <tr
+                  key={device.address}
+                  onClick={() => onSelect(device.address)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View device ${device.address}`}
+                  onKeyDown={(e) => e.key === 'Enter' && onSelect(device.address)}
+                >
+                  <td className="addr">{truncateAddress(device.address, 8, 8)}</td>
+                  <td className="type">{device.device_type}</td>
+                  <td>
+                    <span className={`pill ${device.active ? 'pill-success' : 'pill-danger'}`}>
+                      {device.active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="mono">{formatUnixSeconds(device.registered_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>
