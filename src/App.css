@@ -612,6 +612,20 @@ footer.note {
   padding: 0 4px;
 }
 
+/* ---- Topography backdrop (dashboard only) ----
+   pointer-events: none so it never blocks clicks on real UI underneath —
+   safe because the component's cursor/click reactivity listens on
+   `window`, not the canvas itself, so it still responds through this. */
+.backdrop-topography {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop-topography {
+    display: none;
+  }
+}
+
 /* ---- Landing page ---- */
 
 .landing {

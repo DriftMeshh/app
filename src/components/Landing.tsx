@@ -2,6 +2,7 @@ import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { Logo } from './Logo';
 import { WalletButton } from './WalletButton';
+import Topography from './Topography/Topography';
 
 interface Props {
   onEnter: () => void;
@@ -30,7 +31,19 @@ export function Landing({ onEnter }: Props) {
 
   return (
     <div className="landing">
-      <div className="backdrop" />
+      <div className="backdrop backdrop-topography">
+        <Topography
+          color="#fcd535"
+          lineCount={18}
+          lineWidth={1}
+          opacity={0.22}
+          brightness={0.8}
+          glow={0.4}
+          speed={0.15}
+          lightMode={false}
+          markers="none"
+        />
+      </div>
 
       <header className="glass topbar landing-topbar">
         <div className="brand">
