@@ -812,3 +812,28 @@ footer.note {
     height: 1px;
   }
 }
+
+@media (max-width: 560px) {
+  /* The brand + two buttons share one row only on desktop widths — below
+     this, stack the brand above its own full-width button row instead of
+     letting the buttons wrap mid-row next to the logo. */
+  .landing-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 36px;
+  }
+  .topbar-right {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .topbar-right .glass-button {
+    flex: 1;
+    text-align: center;
+  }
+  .wallet-button-wrap {
+    width: 100%;
+    align-items: stretch;
+  }
+}
