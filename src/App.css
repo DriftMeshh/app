@@ -134,6 +134,20 @@
   }
 }
 
+@media (max-width: 560px) {
+  /* overflow-x: auto hid the LIVE indicator off-screen behind a scroll
+     with no visible hint it was there — wrapping instead keeps every
+     item visible without scrolling. */
+  .ticker-bar {
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    overflow-x: visible;
+  }
+  .live-dot-wrap {
+    margin-left: 0;
+  }
+}
+
 /* ---- Body: sidebar nav + main content, side by side on desktop ---- */
 
 .body-row {
@@ -234,6 +248,17 @@
 .panel-header .muted {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+@media (max-width: 560px) {
+  /* The title and the "Live from the indexer" + Refresh group both want
+     horizontal room — stacking instead of cramming them onto one row
+     keeps the title from wrapping mid-word next to the button. */
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 
 .state-msg {
