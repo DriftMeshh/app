@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
-import { formatTimestamp, truncateAddress } from '../format';
+import { formatRelativeTime, truncateAddress } from '../format';
 import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
 import { ClaimAction } from './ClaimAction';
 import { ReadingsChart } from './ReadingsChart';
@@ -112,7 +112,7 @@ export function DeviceDetail({ address, onBack }: Props) {
                 <div>
                   <span className="v">{claim.payout}</span>
                   <div style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'right' }}>
-                    {formatTimestamp(claim.closed_at)}
+                    {formatRelativeTime(claim.closed_at)}
                   </div>
                 </div>
               </div>
