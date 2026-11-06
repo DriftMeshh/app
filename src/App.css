@@ -293,6 +293,24 @@
   border-radius: var(--radius-md);
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.pagination .glass-button {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.pagination .glass-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .device-table {
   width: 100%;
   border-collapse: collapse;

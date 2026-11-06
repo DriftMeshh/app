@@ -44,6 +44,48 @@ describe('DeviceList', () => {
     await waitFor(() => expect(screen.getByText(/network down/i)).toBeInTheDocument());
   });
 
+  it('paginates when there are more devices than one page', async () => {
+    const devices: Device[] = Array.from({ length: 25 }, (_, i) => ({
+      ...mockDevice,
+      address: `GDEVICE${i.toString().padStart(2, '0')}`,
+      registered_at: 1_800_000_000 + i,
+    }));
+    vi.mocked(api.listDevices).mockResolvedValue(devices);
+    render(<DeviceList onSelect={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument());
+    expect(screen.getByLabelText(/previous page/i)).toBeDisabled();
+    expect(screen.getByLabelText(/next page/i)).not.toBeDisabled();
+
+    fireEvent.click(screen.getByLabelText(/next page/i));
+    await waitFor(() => expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByLabelText(/next page/i));
+    await waitFor(() => expect(screen.getByText(/page 3 of 3/i)).toBeInTheDocument());
+    expect(screen.getByLabelText(/next page/i)).toBeDisabled();
+  });
+
+  it('resets to page 1 when a search narrows the results', async () => {
+    const devices: Device[] = Array.from({ length: 25 }, (_, i) => ({
+      ...mockDevice,
+      address: `GDEVICE${i.toString().padStart(2, '0')}`,
+      device_type: i === 0 ? 'air_quality' : 'weather',
+      registered_at: 1_800_000_000 + i,
+    }));
+    vi.mocked(api.listDevices).mockResolvedValue(devices);
+    render(<DeviceList onSelect={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByLabelText(/next page/i));
+    await waitFor(() => expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText(/search devices/i), {
+      target: { value: 'air_quality' },
+    });
+    await waitFor(() => expect(screen.getByText('1 of 25')).toBeInTheDocument());
+    expect(screen.queryByText(/page \d of \d/i)).not.toBeInTheDocument();
+  });
+
   it('calls onSelect with the device address when a card is clicked', async () => {
     vi.mocked(api.listDevices).mockResolvedValue([mockDevice]);
     const onSelect = vi.fn();

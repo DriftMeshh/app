@@ -5,6 +5,16 @@ import type { Claim, Device, Reading, RegionAverage, SubscriptionStatus } from '
 // set this to the indexer's real public URL.
 const BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
+// The indexer always wraps GET /devices and GET /devices/:address/readings
+// in this envelope (see indexer/src/db/repository.ts PaginatedResult) — even
+// without a limit param, since it applies its own default limit.
+interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
   if (!res.ok) {
@@ -15,10 +25,21 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  listDevices: () => get<Device[]>('/devices'),
+  listDevices: async (options?: { limit?: number; offset?: number }): Promise<Device[]> => {
+    const params = new URLSearchParams();
+    if (options?.limit !== undefined) params.set('limit', String(options.limit));
+    if (options?.offset !== undefined) params.set('offset', String(options.offset));
+    const qs = params.toString();
+    const result = await get<PaginatedResult<Device>>(`/devices${qs ? `?${qs}` : ''}`);
+    return result.data;
+  },
   getDevice: (address: string) => get<Device>(`/devices/${address}`),
-  getReadings: (address: string, limit = 50) =>
-    get<Reading[]>(`/devices/${address}/readings?limit=${limit}`),
+  getReadings: async (address: string, limit = 50, offset = 0): Promise<Reading[]> => {
+    const result = await get<PaginatedResult<Reading>>(
+      `/devices/${address}/readings?limit=${limit}&offset=${offset}`,
+    );
+    return result.data;
+  },
   getClaims: (address: string) => get<Claim[]>(`/devices/${address}/claims`),
   getRegionAverage: (regionCode: number, epoch: number) =>
     get<RegionAverage>(`/regions/${regionCode}/average?epoch=${epoch}`),

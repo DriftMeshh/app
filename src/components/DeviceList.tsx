@@ -19,6 +19,8 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'registered_at', label: 'Registered' },
 ];
 
+const PAGE_SIZE = 10;
+
 function compare(a: Device, b: Device, key: SortKey): number {
   if (key === 'active') return a.active - b.active;
   if (key === 'registered_at') return a.registered_at - b.registered_at;
@@ -30,6 +32,7 @@ export function DeviceList({ onSelect }: Props) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('registered_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [page, setPage] = useState(0);
   const state = useAsync(() => api.listDevices(), [refreshKey]);
 
   function toggleSort(key: SortKey) {
@@ -39,9 +42,10 @@ export function DeviceList({ onSelect }: Props) {
       setSortKey(key);
       setSortDir('asc');
     }
+    setPage(0);
   }
 
-  const visible = useMemo(() => {
+  const filteredSorted = useMemo(() => {
     if (state.status !== 'success') return [];
     const q = query.trim().toLowerCase();
     const filtered = q
@@ -53,6 +57,16 @@ export function DeviceList({ onSelect }: Props) {
     return sortDir === 'asc' ? sorted : sorted.reverse();
   }, [state, query, sortKey, sortDir]);
 
+  const pageCount = Math.max(1, Math.ceil(filteredSorted.length / PAGE_SIZE));
+  // Search/sort/refresh can shrink the result set out from under the
+  // current page (e.g. typing a narrower search while on page 3) — clamp
+  // rather than show a confusing empty page.
+  const currentPage = Math.min(page, pageCount - 1);
+  const visible = filteredSorted.slice(
+    currentPage * PAGE_SIZE,
+    currentPage * PAGE_SIZE + PAGE_SIZE,
+  );
+
   return (
     <section className="glass panel">
       <div className="panel-header">
@@ -61,7 +75,10 @@ export function DeviceList({ onSelect }: Props) {
           <span className="muted">Live from the indexer</span>
           <button
             className="glass-button"
-            onClick={() => setRefreshKey((k) => k + 1)}
+            onClick={() => {
+              setRefreshKey((k) => k + 1);
+              setPage(0);
+            }}
             disabled={state.status === 'loading'}
             aria-label="Refresh device list"
             style={{ padding: '4px 12px', fontSize: 13 }}
@@ -77,11 +94,14 @@ export function DeviceList({ onSelect }: Props) {
             className="glass-input"
             placeholder="Search by address or type…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(0);
+            }}
             aria-label="Search devices"
           />
           <span className="muted">
-            {visible.length} of {state.data.length}
+            {filteredSorted.length} of {state.data.length}
           </span>
         </div>
       )}
@@ -91,47 +111,73 @@ export function DeviceList({ onSelect }: Props) {
       {state.status === 'success' && state.data.length === 0 && (
         <EmptyMessage label="No devices indexed yet. Register one with device-sdk and it'll show up here." />
       )}
-      {state.status === 'success' && state.data.length > 0 && visible.length === 0 && (
+      {state.status === 'success' && state.data.length > 0 && filteredSorted.length === 0 && (
         <EmptyMessage label="No devices match that search." />
       )}
-      {state.status === 'success' && visible.length > 0 && (
-        <div className="device-table-wrap">
-          <table className="device-table">
-            <thead>
-              <tr>
-                {COLUMNS.map((col) => (
-                  <th key={col.key} onClick={() => toggleSort(col.key)}>
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span className="sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((device) => (
-                <tr
-                  key={device.address}
-                  onClick={() => onSelect(device.address)}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`View device ${device.address}`}
-                  onKeyDown={(e) => e.key === 'Enter' && onSelect(device.address)}
-                >
-                  <td className="addr">{truncateAddress(device.address, 8, 8)}</td>
-                  <td className="type">{device.device_type}</td>
-                  <td>
-                    <span className={`pill ${device.active ? 'pill-success' : 'pill-danger'}`}>
-                      {device.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="mono">{formatUnixSeconds(device.registered_at)}</td>
+      {state.status === 'success' && filteredSorted.length > 0 && (
+        <>
+          <div className="device-table-wrap">
+            <table className="device-table">
+              <thead>
+                <tr>
+                  {COLUMNS.map((col) => (
+                    <th key={col.key} onClick={() => toggleSort(col.key)}>
+                      {col.label}
+                      {sortKey === col.key && (
+                        <span className="sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span>
+                      )}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {visible.map((device) => (
+                  <tr
+                    key={device.address}
+                    onClick={() => onSelect(device.address)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View device ${device.address}`}
+                    onKeyDown={(e) => e.key === 'Enter' && onSelect(device.address)}
+                  >
+                    <td className="addr">{truncateAddress(device.address, 8, 8)}</td>
+                    <td className="type">{device.device_type}</td>
+                    <td>
+                      <span className={`pill ${device.active ? 'pill-success' : 'pill-danger'}`}>
+                        {device.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="mono">{formatUnixSeconds(device.registered_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {pageCount > 1 && (
+            <div className="pagination">
+              <button
+                className="glass-button"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                aria-label="Previous page"
+              >
+                ← Prev
+              </button>
+              <span className="muted">
+                Page {currentPage + 1} of {pageCount}
+              </span>
+              <button
+                className="glass-button"
+                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                disabled={currentPage >= pageCount - 1}
+                aria-label="Next page"
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );
