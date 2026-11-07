@@ -36,10 +36,24 @@ if (typeof window !== "undefined") {
 export const Errors = {
   1: {message:"NotInitialized"},
   2: {message:"AlreadyInitialized"},
-  3: {message:"InvalidPeriods"}
+  3: {message:"InvalidPeriods"},
+  /**
+   * set_price was called with price <= 0. A zero-or-negative price would
+   * let subscribers fund nothing into the pool, breaking the economic loop.
+   */
+  4: {message:"InvalidPrice"}
 }
 
+
+
 export interface Client {
+  /**
+   * Construct and simulate a get_price transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
+   * Returns the current price per subscription period.
+   * Returns 0 if the contract has not been initialized.
+   */
+  get_price: (options?: MethodOptions) => Promise<AssembledTransaction<i128>>
+
   /**
    * Construct and simulate a is_active transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
@@ -86,7 +100,10 @@ export class Client extends ContractClient {
   }
   constructor(public readonly options: ContractClientOptions) {
     super(
-      new ContractSpec([ "AAAABAAAAAAAAAAAAAAABUVycm9yAAAAAAAAAwAAAAAAAAAOTm90SW5pdGlhbGl6ZWQAAAAAAAEAAAAAAAAAEkFscmVhZHlJbml0aWFsaXplZAAAAAAAAgAAAAAAAAAOSW52YWxpZFBlcmlvZHMAAAAAAAM=",
+      new ContractSpec([ "AAAABAAAAAAAAAAAAAAABUVycm9yAAAAAAAABAAAAAAAAAAOTm90SW5pdGlhbGl6ZWQAAAAAAAEAAAAAAAAAEkFscmVhZHlJbml0aWFsaXplZAAAAAAAAgAAAAAAAAAOSW52YWxpZFBlcmlvZHMAAAAAAAMAAACMc2V0X3ByaWNlIHdhcyBjYWxsZWQgd2l0aCBwcmljZSA8PSAwLiBBIHplcm8tb3ItbmVnYXRpdmUgcHJpY2Ugd291bGQKbGV0IHN1YnNjcmliZXJzIGZ1bmQgbm90aGluZyBpbnRvIHRoZSBwb29sLCBicmVha2luZyB0aGUgZWNvbm9taWMgbG9vcC4AAAAMSW52YWxpZFByaWNlAAAABA==",
+        "AAAABQAAAIhFbWl0dGVkIHdoZW4gYSBzdWJzY3JpYmVyIHB1cmNoYXNlcyBvciBleHRlbmRzIHRoZWlyIHN1YnNjcmlwdGlvbi4KVG9waWNzOiBbInN1YnNjcmliZSIsIHN1YnNjcmliZXJfYWRkcmVzc10KRGF0YTogKHBlcmlvZHMsIG5ld19leHBpcnkpAAAAAAAAAAlTdWJzY3JpYmUAAAAAAAABAAAACXN1YnNjcmliZQAAAAAAAAMAAAAAAAAACnN1YnNjcmliZXIAAAAAABMAAAABAAAAAAAAAAdwZXJpb2RzAAAAAAQAAAAAAAAAAAAAAApuZXdfZXhwaXJ5AAAAAAAGAAAAAAAAAAI=",
+        "AAAABQAAAG1FbWl0dGVkIHdoZW4gdGhlIGFkbWluIHVwZGF0ZXMgdGhlIHN1YnNjcmlwdGlvbiBwcmljZS4KVG9waWNzOiBbInByaWNlX3VwZGF0ZWQiXQpEYXRhOiAob2xkX3ByaWNlLCBuZXdfcHJpY2UpAAAAAAAAAAAAAAxQcmljZVVwZGF0ZWQAAAABAAAADXByaWNlX3VwZGF0ZWQAAAAAAAACAAAAAAAAAAlvbGRfcHJpY2UAAAAAAAALAAAAAAAAAAAAAAAJbmV3X3ByaWNlAAAAAAAACwAAAAAAAAAC",
+        "AAAAAAAAAGZSZXR1cm5zIHRoZSBjdXJyZW50IHByaWNlIHBlciBzdWJzY3JpcHRpb24gcGVyaW9kLgpSZXR1cm5zIDAgaWYgdGhlIGNvbnRyYWN0IGhhcyBub3QgYmVlbiBpbml0aWFsaXplZC4AAAAAAAlnZXRfcHJpY2UAAAAAAAAAAAAAAQAAAAs=",
         "AAAAAAAAAAAAAAAJaXNfYWN0aXZlAAAAAAAAAQAAAAAAAAAKc3Vic2NyaWJlcgAAAAAAEwAAAAEAAAAB",
         "AAAAAAAAAAAAAAAJc2V0X3ByaWNlAAAAAAAAAgAAAAAAAAAFYWRtaW4AAAAAAAATAAAAAAAAAAVwcmljZQAAAAAAAAsAAAABAAAD6QAAAAIAAAAD",
         "AAAAAAAAAJxQYXkgZm9yIGBwZXJpb2RzYCBvZiBhY2Nlc3MuIEV4dGVuZHMgYW55IGV4aXN0aW5nLCBzdGlsbC1hY3RpdmUKc3Vic2NyaXB0aW9uIHJhdGhlciB0aGFuIG92ZXJ3cml0aW5nIGl0LiBSZXR1cm5zIHRoZSBuZXcgZXhwaXJ5CihsZWRnZXIgdGltZXN0YW1wLCBzZWNvbmRzKS4AAAAJc3Vic2NyaWJlAAAAAAAAAgAAAAAAAAAKc3Vic2NyaWJlcgAAAAAAEwAAAAAAAAAHcGVyaW9kcwAAAAAEAAAAAQAAA+kAAAAGAAAAAw==",
@@ -96,7 +113,8 @@ export class Client extends ContractClient {
     )
   }
   public readonly fromJSON = {
-    is_active: this.txFromJSON<boolean>,
+    get_price: this.txFromJSON<i128>,
+        is_active: this.txFromJSON<boolean>,
         set_price: this.txFromJSON<Result<void>>,
         subscribe: this.txFromJSON<Result<u64>>,
         get_expiry: this.txFromJSON<u64>,
