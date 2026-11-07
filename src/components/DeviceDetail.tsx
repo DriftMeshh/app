@@ -5,6 +5,7 @@ import { formatRelativeTime, truncateAddress } from '../format';
 import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
 import { ClaimAction } from './ClaimAction';
 import { ReadingsChart } from './ReadingsChart';
+import { getRejectedStatus } from '../wallet/contracts';
 
 interface Props {
   address: string;
@@ -16,6 +17,7 @@ export function DeviceDetail({ address, onBack }: Props) {
   const device = useAsync(() => api.getDevice(address), [address, refreshKey]);
   const readings = useAsync(() => api.getReadings(address, 20), [address, refreshKey]);
   const claims = useAsync(() => api.getClaims(address), [address, refreshKey]);
+  const rejectedStatus = useAsync(() => getRejectedStatus(address), [address, refreshKey]);
 
   const isRefreshing =
     device.status === 'loading' || readings.status === 'loading' || claims.status === 'loading';
@@ -67,6 +69,24 @@ export function DeviceDetail({ address, onBack }: Props) {
                   : 'unknown'}
               </span>
             </div>
+            {rejectedStatus.status === 'success' && (
+              <div className="row">
+                <span className="k">Rejected readings</span>
+                {rejectedStatus.data.threshold > 0 ? (
+                  <span
+                    className={`pill ${
+                      rejectedStatus.data.rejectedCount >= rejectedStatus.data.threshold
+                        ? 'pill-danger'
+                        : 'pill-neutral'
+                    }`}
+                  >
+                    {rejectedStatus.data.rejectedCount} / {rejectedStatus.data.threshold}
+                  </span>
+                ) : (
+                  <span className="v">{rejectedStatus.data.rejectedCount} (auto-slash disabled)</span>
+                )}
+              </div>
+            )}
           </>
         )}
       </section>
