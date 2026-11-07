@@ -881,6 +881,12 @@ footer.note {
   }
 }
 
+.theme-toggle {
+  padding: 9px 12px;
+  font-size: 16px;
+  line-height: 1;
+}
+
 /* ---- Error boundary fallback ---- */
 
 .error-boundary {

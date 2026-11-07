@@ -10,6 +10,7 @@ import { SubscriptionCheck } from './components/SubscriptionCheck';
 import { WalletButton } from './components/WalletButton';
 import { TickerBar } from './components/TickerBar';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ThemeToggle } from './components/ThemeToggle';
 
 type Tab = 'devices' | 'map' | 'region' | 'subscription';
 type View = 'landing' | 'app';
@@ -48,6 +49,7 @@ function App() {
             <Logo />
             DriftMesh
           </div>
+          <ThemeToggle />
           <WalletButton />
         </div>
         <ErrorBoundary fallback={null}>

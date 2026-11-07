@@ -2,6 +2,7 @@ import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { Logo } from './Logo';
 import { WalletButton } from './WalletButton';
+import { ThemeToggle } from './ThemeToggle';
 import Topography from './Topography/Topography';
 
 interface Props {
@@ -51,6 +52,7 @@ export function Landing({ onEnter }: Props) {
           DriftMesh
         </div>
         <div className="topbar-right">
+          <ThemeToggle />
           <WalletButton />
           <button className="glass-button" onClick={onEnter}>
             Open dashboard →
