@@ -24,6 +24,12 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface DevicesPage {
+  data: Device[];
+  /** Full count of matching devices server-side, before any limit/offset — not just `data.length`. */
+  total: number;
+}
+
 export const api = {
   listDevices: async (options?: { limit?: number; offset?: number }): Promise<Device[]> => {
     const params = new URLSearchParams();
@@ -32,6 +38,20 @@ export const api = {
     const qs = params.toString();
     const result = await get<PaginatedResult<Device>>(`/devices${qs ? `?${qs}` : ''}`);
     return result.data;
+  },
+  /**
+   * Like `listDevices`, but also surfaces the server's true `total` — needed
+   * by any UI (e.g. DeviceList's pagination) that would otherwise silently
+   * treat `data.length` as "all devices" once a fleet exceeds the server's
+   * default page limit.
+   */
+  listDevicesPage: async (options?: { limit?: number; offset?: number }): Promise<DevicesPage> => {
+    const params = new URLSearchParams();
+    if (options?.limit !== undefined) params.set('limit', String(options.limit));
+    if (options?.offset !== undefined) params.set('offset', String(options.offset));
+    const qs = params.toString();
+    const result = await get<PaginatedResult<Device>>(`/devices${qs ? `?${qs}` : ''}`);
+    return { data: result.data, total: result.total };
   },
   getDevice: (address: string) => get<Device>(`/devices/${address}`),
   getReadings: async (address: string, limit = 50, offset = 0): Promise<Reading[]> => {
