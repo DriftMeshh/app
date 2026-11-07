@@ -20,6 +20,10 @@ const COLUMNS: { key: SortKey; label: string }[] = [
 ];
 
 const PAGE_SIZE = 10;
+// The server's own max page size (see indexer's MAX_LIMIT) — requesting this
+// up front means "everything" in practice for any realistic fleet size,
+// while still being honest via `total` if a fleet ever actually exceeds it.
+const FETCH_LIMIT = 500;
 
 function compare(a: Device, b: Device, key: SortKey): number {
   if (key === 'active') return a.active - b.active;
@@ -33,7 +37,7 @@ export function DeviceList({ onSelect }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('registered_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(0);
-  const state = useAsync(() => api.listDevices(), [refreshKey]);
+  const state = useAsync(() => api.listDevicesPage({ limit: FETCH_LIMIT }), [refreshKey]);
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -49,10 +53,10 @@ export function DeviceList({ onSelect }: Props) {
     if (state.status !== 'success') return [];
     const q = query.trim().toLowerCase();
     const filtered = q
-      ? state.data.filter(
+      ? state.data.data.filter(
           (d) => d.address.toLowerCase().includes(q) || d.device_type.toLowerCase().includes(q),
         )
-      : state.data;
+      : state.data.data;
     const sorted = [...filtered].sort((a, b) => compare(a, b, sortKey));
     return sortDir === 'asc' ? sorted : sorted.reverse();
   }, [state, query, sortKey, sortDir]);
@@ -88,7 +92,7 @@ export function DeviceList({ onSelect }: Props) {
         </div>
       </div>
 
-      {state.status === 'success' && state.data.length > 0 && (
+      {state.status === 'success' && state.data.data.length > 0 && (
         <div className="table-toolbar">
           <input
             className="glass-input"
@@ -101,17 +105,19 @@ export function DeviceList({ onSelect }: Props) {
             aria-label="Search devices"
           />
           <span className="muted">
-            {filteredSorted.length} of {state.data.length}
+            {filteredSorted.length} of {state.data.total}
+            {state.data.data.length < state.data.total &&
+              ` (showing first ${state.data.data.length})`}
           </span>
         </div>
       )}
 
       {state.status === 'loading' && <LoadingMessage label="Fetching devices…" />}
       {state.status === 'error' && <ErrorMessage message={state.error} />}
-      {state.status === 'success' && state.data.length === 0 && (
+      {state.status === 'success' && state.data.data.length === 0 && (
         <EmptyMessage label="No devices indexed yet. Register one with device-sdk and it'll show up here." />
       )}
-      {state.status === 'success' && state.data.length > 0 && filteredSorted.length === 0 && (
+      {state.status === 'success' && state.data.data.length > 0 && filteredSorted.length === 0 && (
         <EmptyMessage label="No devices match that search." />
       )}
       {state.status === 'success' && filteredSorted.length > 0 && (
