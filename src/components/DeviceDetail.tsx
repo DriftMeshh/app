@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { formatRelativeTime, truncateAddress } from '../format';
@@ -12,6 +12,10 @@ interface Props {
   onBack: () => void;
 }
 
+// Freshness, not a live feed — the indexer has no push/websocket support (see
+// indexer's README "Known limitations"), so this is a plain polling refetch.
+const AUTO_REFRESH_INTERVAL_MS = 12_000;
+
 export function DeviceDetail({ address, onBack }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const device = useAsync(() => api.getDevice(address), [address, refreshKey]);
@@ -21,6 +25,24 @@ export function DeviceDetail({ address, onBack }: Props) {
 
   const isRefreshing =
     device.status === 'loading' || readings.status === 'loading' || claims.status === 'loading';
+  // Read via a ref inside the interval below so the interval itself doesn't
+  // need recreating (and its 12s cadence restarting) every time a fetch
+  // starts or finishes.
+  const isRefreshingRef = useRef(isRefreshing);
+  isRefreshingRef.current = isRefreshing;
+
+  // Auto-refresh while this view is open, but only while the tab is actually
+  // visible — a backgrounded tab shouldn't keep hitting the indexer. Skips a
+  // tick if a fetch triggered by something else (manual refresh, a prior
+  // tick) is still in flight, rather than stacking overlapping requests.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible' && !isRefreshingRef.current) {
+        setRefreshKey((k) => k + 1);
+      }
+    }, AUTO_REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [address]);
 
   return (
     <div className="page">
