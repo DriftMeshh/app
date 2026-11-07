@@ -1,5 +1,6 @@
 import { Client as SubscriptionMarketClient } from 'subscription-market';
 import { Client as PaymentStreamerClient } from 'payment-streamer';
+import { Client as SubmissionValidatorClient } from 'submission-validator';
 import { stellarConfig } from '../stellarConfig';
 import { signTransaction, signAuthEntry } from './kit';
 
@@ -27,6 +28,26 @@ export async function getSubscriptionPrice(): Promise<bigint> {
   });
   const tx = await client.get_price();
   return tx.result;
+}
+
+/**
+ * Reads a device's lifetime rejected-reading count and submission-validator's
+ * configured auto-slash threshold (0 = disabled). Both are read-only, direct
+ * contract reads — the indexer doesn't expose this data yet.
+ */
+export async function getRejectedStatus(
+  device: string,
+): Promise<{ rejectedCount: number; threshold: number }> {
+  const client = new SubmissionValidatorClient({
+    contractId: stellarConfig.submissionValidatorContractId,
+    networkPassphrase: stellarConfig.networkPassphrase,
+    rpcUrl: stellarConfig.rpcUrl,
+  });
+  const [rejected, threshold] = await Promise.all([
+    client.get_rejected_count({ device }),
+    client.get_auto_slash_threshold(),
+  ]);
+  return { rejectedCount: rejected.result, threshold: threshold.result };
 }
 
 /** Subscribes `address` for `periods`, paying straight into payment-streamer's balance. Returns the new expiry (unix seconds). */
