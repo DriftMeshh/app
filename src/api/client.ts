@@ -44,4 +44,13 @@ export const api = {
   getRegionAverage: (regionCode: number, epoch: number) =>
     get<RegionAverage>(`/regions/${regionCode}/average?epoch=${epoch}`),
   getSubscription: (address: string) => get<SubscriptionStatus>(`/subscriptions/${address}`),
+  /** True if the indexer answered `GET /health` with a 2xx — never throws. */
+  checkHealth: async (): Promise<boolean> => {
+    try {
+      const res = await fetch(`${BASE}/health`);
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
 };

@@ -11,6 +11,7 @@ import { WalletButton } from './components/WalletButton';
 import { TickerBar } from './components/TickerBar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeToggle } from './components/ThemeToggle';
+import { ConnectivityBanner } from './components/ConnectivityBanner';
 
 type Tab = 'devices' | 'map' | 'region' | 'subscription';
 type View = 'landing' | 'app';
@@ -27,14 +28,18 @@ function App() {
 
   if (view === 'landing') {
     return (
-      <ErrorBoundary label="the landing page">
-        <Landing onEnter={() => setView('app')} />
-      </ErrorBoundary>
+      <>
+        <ConnectivityBanner />
+        <ErrorBoundary label="the landing page">
+          <Landing onEnter={() => setView('app')} />
+        </ErrorBoundary>
+      </>
     );
   }
 
   return (
     <div className="shell">
+      <ConnectivityBanner />
       <div className="backdrop" />
 
       <header className="glass topbar">
