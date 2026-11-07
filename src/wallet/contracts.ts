@@ -13,6 +13,22 @@ function baseOptions(address: string) {
   };
 }
 
+/**
+ * Reads the live per-period subscription price (in stroops) from
+ * subscription-market. No wallet needed — this is a read-only call, so it
+ * omits `publicKey`, which makes the SDK simulate against a null account
+ * instead of looking one up on-chain.
+ */
+export async function getSubscriptionPrice(): Promise<bigint> {
+  const client = new SubscriptionMarketClient({
+    contractId: stellarConfig.subscriptionMarketContractId,
+    networkPassphrase: stellarConfig.networkPassphrase,
+    rpcUrl: stellarConfig.rpcUrl,
+  });
+  const tx = await client.get_price();
+  return tx.result;
+}
+
 /** Subscribes `address` for `periods`, paying straight into payment-streamer's balance. Returns the new expiry (unix seconds). */
 export async function subscribe(address: string, periods: number): Promise<bigint> {
   const client = new SubscriptionMarketClient({

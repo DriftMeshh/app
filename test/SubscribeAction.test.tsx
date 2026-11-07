@@ -3,7 +3,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { SubscribeAction } from '../src/components/SubscribeAction';
 import { WalletButton } from '../src/components/WalletButton';
 import { connectWallet } from '../src/wallet/kit';
-import { subscribe } from '../src/wallet/contracts';
+import { subscribe, getSubscriptionPrice } from '../src/wallet/contracts';
 import { renderWithProviders as render } from './testUtils';
 
 // Stubbed directly, not vi.importActual — see WalletButton.test.tsx for why.
@@ -13,11 +13,17 @@ vi.mock('../src/wallet/kit', () => ({
   signTransaction: vi.fn(),
   signAuthEntry: vi.fn(),
 }));
-vi.mock('../src/wallet/contracts', () => ({ subscribe: vi.fn(), claim: vi.fn() }));
+vi.mock('../src/wallet/contracts', () => ({
+  subscribe: vi.fn(),
+  claim: vi.fn(),
+  getSubscriptionPrice: vi.fn(),
+}));
 
 beforeEach(() => {
   vi.mocked(connectWallet).mockReset();
   vi.mocked(subscribe).mockReset();
+  vi.mocked(getSubscriptionPrice).mockReset();
+  vi.mocked(getSubscriptionPrice).mockResolvedValue(5_000_000_000n);
 });
 
 describe('SubscribeAction', () => {
@@ -39,6 +45,7 @@ describe('SubscribeAction', () => {
 
     fireEvent.click(screen.getByText('Connect wallet'));
     await waitFor(() => expect(screen.getByLabelText(/periods/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/per period/i)).toBeInTheDocument());
 
     fireEvent.change(screen.getByLabelText(/periods/i), { target: { value: '3' } });
     fireEvent.click(screen.getByText('Subscribe'));
@@ -60,8 +67,47 @@ describe('SubscribeAction', () => {
 
     fireEvent.click(screen.getByText('Connect wallet'));
     await waitFor(() => expect(screen.getByLabelText(/periods/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/per period/i)).toBeInTheDocument());
     fireEvent.click(screen.getByText('Subscribe'));
 
     await waitFor(() => expect(screen.getByText(/insufficient balance/i)).toBeInTheDocument());
+  });
+
+  it('shows the live per-period price and the total for the chosen number of periods', async () => {
+    vi.mocked(connectWallet).mockResolvedValue('GCONSUMER');
+    vi.mocked(getSubscriptionPrice).mockResolvedValue(5_000_000_000n); // 500 DMU
+
+    render(
+      <>
+        <WalletButton />
+        <SubscribeAction />
+      </>,
+    );
+
+    fireEvent.click(screen.getByText('Connect wallet'));
+    await waitFor(() => expect(screen.getByLabelText(/periods/i)).toBeInTheDocument());
+
+    expect(await screen.findByText(/500 DMU per period — 500 DMU total/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/periods/i), { target: { value: '3' } });
+    expect(await screen.findByText(/500 DMU per period — 1500 DMU total/i)).toBeInTheDocument();
+  });
+
+  it('disables Subscribe and shows an error if the price fails to load', async () => {
+    vi.mocked(connectWallet).mockResolvedValue('GCONSUMER');
+    vi.mocked(getSubscriptionPrice).mockRejectedValue(new Error('RPC down'));
+
+    render(
+      <>
+        <WalletButton />
+        <SubscribeAction />
+      </>,
+    );
+
+    fireEvent.click(screen.getByText('Connect wallet'));
+    await waitFor(() => expect(screen.getByLabelText(/periods/i)).toBeInTheDocument());
+
+    expect(await screen.findByText(/couldn't load the current price/i)).toBeInTheDocument();
+    expect(screen.getByText('Subscribe')).toBeDisabled();
   });
 });
