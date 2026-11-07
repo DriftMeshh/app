@@ -1,12 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DeviceList } from '../src/components/DeviceList';
-import { api } from '../src/api/client';
+import { api, type DevicesPage } from '../src/api/client';
 import type { Device } from '../src/api/types';
 
 vi.mock('../src/api/client', () => ({
-  api: { listDevices: vi.fn() },
+  api: { listDevicesPage: vi.fn() },
 }));
+
+function page(data: Device[], total = data.length): DevicesPage {
+  return { data, total };
+}
 
 const mockDevice: Device = {
   address: 'GCP747BSVGJ523PFRMTFW2DLWHHVFVALX3JNJL77TQZMEHV75IC7HTRT',
@@ -19,12 +23,12 @@ const mockDevice: Device = {
 };
 
 beforeEach(() => {
-  vi.mocked(api.listDevices).mockReset();
+  vi.mocked(api.listDevicesPage).mockReset();
 });
 
 describe('DeviceList', () => {
   it('shows a loading state, then renders devices', async () => {
-    vi.mocked(api.listDevices).mockResolvedValue([mockDevice]);
+    vi.mocked(api.listDevicesPage).mockResolvedValue(page([mockDevice]));
     render(<DeviceList onSelect={() => {}} />);
 
     expect(screen.getByText(/fetching devices/i)).toBeInTheDocument();
@@ -33,13 +37,13 @@ describe('DeviceList', () => {
   });
 
   it('shows an empty-state message when there are no devices', async () => {
-    vi.mocked(api.listDevices).mockResolvedValue([]);
+    vi.mocked(api.listDevicesPage).mockResolvedValue(page([]));
     render(<DeviceList onSelect={() => {}} />);
     await waitFor(() => expect(screen.getByText(/no devices indexed yet/i)).toBeInTheDocument());
   });
 
   it('shows an error message when the fetch fails', async () => {
-    vi.mocked(api.listDevices).mockRejectedValue(new Error('network down'));
+    vi.mocked(api.listDevicesPage).mockRejectedValue(new Error('network down'));
     render(<DeviceList onSelect={() => {}} />);
     await waitFor(() => expect(screen.getByText(/network down/i)).toBeInTheDocument());
   });
@@ -50,7 +54,7 @@ describe('DeviceList', () => {
       address: `GDEVICE${i.toString().padStart(2, '0')}`,
       registered_at: 1_800_000_000 + i,
     }));
-    vi.mocked(api.listDevices).mockResolvedValue(devices);
+    vi.mocked(api.listDevicesPage).mockResolvedValue(page(devices));
     render(<DeviceList onSelect={() => {}} />);
 
     await waitFor(() => expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument());
@@ -72,7 +76,7 @@ describe('DeviceList', () => {
       device_type: i === 0 ? 'air_quality' : 'weather',
       registered_at: 1_800_000_000 + i,
     }));
-    vi.mocked(api.listDevices).mockResolvedValue(devices);
+    vi.mocked(api.listDevicesPage).mockResolvedValue(page(devices));
     render(<DeviceList onSelect={() => {}} />);
 
     await waitFor(() => expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument());
@@ -87,12 +91,30 @@ describe('DeviceList', () => {
   });
 
   it('calls onSelect with the device address when a card is clicked', async () => {
-    vi.mocked(api.listDevices).mockResolvedValue([mockDevice]);
+    vi.mocked(api.listDevicesPage).mockResolvedValue(page([mockDevice]));
     const onSelect = vi.fn();
     render(<DeviceList onSelect={onSelect} />);
 
     await waitFor(() => expect(screen.getByText('weather')).toBeInTheDocument());
     fireEvent.click(screen.getByText('weather'));
     expect(onSelect).toHaveBeenCalledWith(mockDevice.address);
+  });
+
+  it('shows the real server total, flagging when the fetched set is truncated', async () => {
+    // Server reports far more devices exist than the 500-device fetch limit
+    // returned — this is exactly the case api.listDevices() used to hide.
+    vi.mocked(api.listDevicesPage).mockResolvedValue(page([mockDevice], 1200));
+    render(<DeviceList onSelect={() => {}} />);
+
+    expect(await screen.findByText(/1 of 1200/)).toBeInTheDocument();
+    expect(screen.getByText(/showing first 1/i)).toBeInTheDocument();
+  });
+
+  it('does not show a truncation note when the fetched set is the whole total', async () => {
+    vi.mocked(api.listDevicesPage).mockResolvedValue(page([mockDevice]));
+    render(<DeviceList onSelect={() => {}} />);
+
+    expect(await screen.findByText('1 of 1')).toBeInTheDocument();
+    expect(screen.queryByText(/showing first/i)).not.toBeInTheDocument();
   });
 });
