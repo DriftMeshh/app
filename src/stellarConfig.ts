@@ -4,4 +4,5 @@ export const stellarConfig = {
     import.meta.env.VITE_NETWORK_PASSPHRASE ?? 'Test SDF Network ; September 2015',
   paymentStreamerContractId: import.meta.env.VITE_PAYMENT_STREAMER_CONTRACT_ID ?? '',
   subscriptionMarketContractId: import.meta.env.VITE_SUBSCRIPTION_MARKET_CONTRACT_ID ?? '',
+  submissionValidatorContractId: import.meta.env.VITE_SUBMISSION_VALIDATOR_CONTRACT_ID ?? '',
 };
