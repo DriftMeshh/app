@@ -9,6 +9,7 @@ import { RegionLookup } from './components/RegionLookup';
 import { SubscriptionCheck } from './components/SubscriptionCheck';
 import { WalletButton } from './components/WalletButton';
 import { TickerBar } from './components/TickerBar';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 type Tab = 'devices' | 'map' | 'region' | 'subscription';
 type View = 'landing' | 'app';
@@ -24,7 +25,11 @@ function App() {
   }
 
   if (view === 'landing') {
-    return <Landing onEnter={() => setView('app')} />;
+    return (
+      <ErrorBoundary label="the landing page">
+        <Landing onEnter={() => setView('app')} />
+      </ErrorBoundary>
+    );
   }
 
   return (
@@ -45,7 +50,9 @@ function App() {
           </div>
           <WalletButton />
         </div>
-        <TickerBar />
+        <ErrorBoundary fallback={null}>
+          <TickerBar />
+        </ErrorBoundary>
       </header>
 
       <div className="body-row">
@@ -65,22 +72,24 @@ function App() {
         </nav>
 
         <main className="page">
-          {tab === 'devices' &&
-            (selectedDevice ? (
-              <DeviceDetail address={selectedDevice} onBack={() => setSelectedDevice(null)} />
-            ) : (
-              <DeviceList onSelect={setSelectedDevice} />
-            ))}
-          {tab === 'map' && (
-            <DeviceMap
-              onSelect={(address) => {
-                setTab('devices');
-                setSelectedDevice(address);
-              }}
-            />
-          )}
-          {tab === 'region' && <RegionLookup />}
-          {tab === 'subscription' && <SubscriptionCheck />}
+          <ErrorBoundary label={`the ${tab} view`} key={tab}>
+            {tab === 'devices' &&
+              (selectedDevice ? (
+                <DeviceDetail address={selectedDevice} onBack={() => setSelectedDevice(null)} />
+              ) : (
+                <DeviceList onSelect={setSelectedDevice} />
+              ))}
+            {tab === 'map' && (
+              <DeviceMap
+                onSelect={(address) => {
+                  setTab('devices');
+                  setSelectedDevice(address);
+                }}
+              />
+            )}
+            {tab === 'region' && <RegionLookup />}
+            {tab === 'subscription' && <SubscriptionCheck />}
+          </ErrorBoundary>
 
           <footer className="note">
             DriftMesh · a DePIN sensor network on Stellar. Data served live by{' '}
