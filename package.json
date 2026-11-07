@@ -21,7 +21,8 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-leaflet": "^5.0.0",
-    "subscription-market": "*"
+    "subscription-market": "*",
+    "submission-validator": "*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
