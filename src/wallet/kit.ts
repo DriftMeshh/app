@@ -46,6 +46,23 @@ export async function connectWallet(): Promise<string> {
   }
 }
 
+/**
+ * Re-queries the connected wallet extension directly for its current
+ * address — unlike `StellarWalletsKit.getAddress()`, which only reads the
+ * kit's own cached value from connect time and would never notice the user
+ * switching accounts inside the extension itself. Returns null if nothing
+ * is connected.
+ */
+export async function fetchCurrentAddress(): Promise<string | null> {
+  if (!initialized) return null;
+  try {
+    const { address } = await StellarWalletsKit.fetchAddress();
+    return address || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function disconnectWallet(): Promise<void> {
   if (!initialized) return;
   await StellarWalletsKit.disconnect();
