@@ -48,3 +48,15 @@ export function formatUnixSeconds(seconds: number): string {
     minute: '2-digit',
   });
 }
+
+/** Stellar/Soroban assets use 7 decimal places (1 unit = 10,000,000 stroops). */
+const STROOPS_PER_UNIT = 10_000_000n;
+
+/** Formats a stroop amount as a DMU-denominated string, e.g. `500 DMU` or `12.5 DMU`. */
+export function formatDmu(stroops: bigint): string {
+  const whole = stroops / STROOPS_PER_UNIT;
+  const frac = stroops % STROOPS_PER_UNIT;
+  if (frac === 0n) return `${whole} DMU`;
+  const fracStr = frac.toString().padStart(7, '0').replace(/0+$/, '');
+  return `${whole}.${fracStr} DMU`;
+}

@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useWallet } from '../wallet/WalletContext';
 import { subscribe, getSubscriptionPrice } from '../wallet/contracts';
-import { formatUnixSeconds } from '../format';
-
-/** Stellar/Soroban assets use 7 decimal places (1 unit = 10,000,000 stroops). */
-const STROOPS_PER_UNIT = 10_000_000n;
-
-function formatPrice(stroops: bigint): string {
-  const whole = stroops / STROOPS_PER_UNIT;
-  const frac = stroops % STROOPS_PER_UNIT;
-  if (frac === 0n) return `${whole} DMU`;
-  const fracStr = frac.toString().padStart(7, '0').replace(/0+$/, '');
-  return `${whole}.${fracStr} DMU`;
-}
+import { formatUnixSeconds, formatDmu } from '../format';
 
 export function SubscribeAction() {
   const { address } = useWallet();
@@ -83,7 +72,7 @@ export function SubscribeAction() {
           ? "Couldn't load the current price — try again shortly."
           : price === null
             ? 'Loading current price…'
-            : `${formatPrice(price)} per period — ${formatPrice(price * BigInt(periodsNum))} total`}
+            : `${formatDmu(price)} per period — ${formatDmu(price * BigInt(periodsNum))} total`}
       </p>
 
       <button
