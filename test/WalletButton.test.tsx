@@ -10,6 +10,7 @@ import { renderWithProviders as render } from './testUtils';
 // tests need the real implementation since only connectWallet is exercised.
 vi.mock('../src/wallet/kit', () => ({
   connectWallet: vi.fn(),
+  fetchCurrentAddress: vi.fn().mockResolvedValue(null),
   disconnectWallet: vi.fn(),
   signTransaction: vi.fn(),
   signAuthEntry: vi.fn(),

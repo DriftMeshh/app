@@ -13,6 +13,7 @@ vi.mock('../src/api/client', () => ({
 // WalletButton.test.tsx for why.
 vi.mock('../src/wallet/kit', () => ({
   connectWallet: vi.fn(),
+  fetchCurrentAddress: vi.fn().mockResolvedValue(null),
   disconnectWallet: vi.fn(),
   signTransaction: vi.fn(),
   signAuthEntry: vi.fn(),

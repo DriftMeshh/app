@@ -18,6 +18,7 @@ vi.mock('../src/api/client', () => ({
 // too — stub the whole module rather than importActual, same as ClaimAction.test.tsx.
 vi.mock('../src/wallet/kit', () => ({
   connectWallet: vi.fn(),
+  fetchCurrentAddress: vi.fn().mockResolvedValue(null),
   disconnectWallet: vi.fn(),
   signTransaction: vi.fn(),
   signAuthEntry: vi.fn(),
