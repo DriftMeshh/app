@@ -81,6 +81,76 @@ describe('DeviceDetail', () => {
     expect(screen.queryByText(/rejected readings/i)).not.toBeInTheDocument();
   });
 
+  describe('readings pagination', () => {
+    function reading(id: number) {
+      return {
+        id,
+        device_address: 'GDEVICE1',
+        device_type: 'weather',
+        region_code: 1,
+        epoch: id,
+        value: 2500,
+        accepted: 1,
+        ledger: 100 + id,
+        closed_at: '2026-01-01T00:00:00Z',
+        tx_hash: `TX${id}`,
+      };
+    }
+
+    beforeEach(() => {
+      vi.mocked(getRejectedStatus).mockResolvedValue({ rejectedCount: 0, threshold: 0 });
+    });
+
+    it('shows no Load more button when the first page is already partial', async () => {
+      vi.mocked(api.getReadings).mockResolvedValue(
+        Array.from({ length: 5 }, (_, i) => reading(i)),
+      );
+
+      render(<DeviceDetail address="GDEVICE1" onBack={() => {}} />);
+
+      await waitFor(() => expect(screen.getByText(/epoch 0 · region/)).toBeInTheDocument());
+      expect(screen.queryByText('Load more')).not.toBeInTheDocument();
+    });
+
+    it('shows Load more when the first page is full, and appends the next page on click', async () => {
+      const firstPage = Array.from({ length: 20 }, (_, i) => reading(i));
+      const secondPage = Array.from({ length: 5 }, (_, i) => reading(20 + i));
+      vi.mocked(api.getReadings).mockImplementation(async (_address, _limit, offset = 0) =>
+        offset === 0 ? firstPage : secondPage,
+      );
+
+      render(<DeviceDetail address="GDEVICE1" onBack={() => {}} />);
+
+      await waitFor(() => expect(screen.getByText('Load more')).toBeInTheDocument());
+      expect(screen.queryByText(/epoch 20 · region/)).not.toBeInTheDocument();
+
+      screen.getByText('Load more').click();
+
+      await waitFor(() => expect(screen.getByText(/epoch 20 · region/)).toBeInTheDocument());
+      expect(api.getReadings).toHaveBeenCalledWith('GDEVICE1', 20, 20);
+      // The second page was partial (5 < 20), so there's nothing further to load.
+      expect(screen.queryByText('Load more')).not.toBeInTheDocument();
+    });
+
+    it('resets accumulated pages on a manual refresh', async () => {
+      const firstPage = Array.from({ length: 20 }, (_, i) => reading(i));
+      const secondPage = Array.from({ length: 20 }, (_, i) => reading(20 + i));
+      vi.mocked(api.getReadings).mockImplementation(async (_address, _limit, offset = 0) =>
+        offset === 0 ? firstPage : secondPage,
+      );
+
+      render(<DeviceDetail address="GDEVICE1" onBack={() => {}} />);
+      await waitFor(() => expect(screen.getByText('Load more')).toBeInTheDocument());
+
+      screen.getByText('Load more').click();
+      await waitFor(() => expect(screen.getByText(/epoch 20 · region/)).toBeInTheDocument());
+
+      screen.getByLabelText(/refresh device details/i).click();
+      await waitFor(() => expect(screen.queryByText(/epoch 20 · region/)).not.toBeInTheDocument());
+      expect(screen.getByText('Load more')).toBeInTheDocument();
+    });
+  });
+
   describe('auto-refresh', () => {
     const originalVisibilityState = Object.getOwnPropertyDescriptor(
       document,
