@@ -6,6 +6,7 @@ import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
 import { ClaimAction } from './ClaimAction';
 import { ReadingsChart } from './ReadingsChart';
 import { getRejectedStatus } from '../wallet/contracts';
+import type { Reading } from '../api/types';
 
 interface Props {
   address: string;
@@ -15,13 +16,55 @@ interface Props {
 // Freshness, not a live feed — the indexer has no push/websocket support (see
 // indexer's README "Known limitations"), so this is a plain polling refetch.
 const AUTO_REFRESH_INTERVAL_MS = 12_000;
+const READINGS_PAGE_SIZE = 20;
 
 export function DeviceDetail({ address, onBack }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const device = useAsync(() => api.getDevice(address), [address, refreshKey]);
-  const readings = useAsync(() => api.getReadings(address, 20), [address, refreshKey]);
+  const readings = useAsync(() => api.getReadings(address, READINGS_PAGE_SIZE), [address, refreshKey]);
   const claims = useAsync(() => api.getClaims(address), [address, refreshKey]);
   const rejectedStatus = useAsync(() => getRejectedStatus(address), [address, refreshKey]);
+
+  // Readings pagination: the first page comes through `readings` above (via
+  // useAsync, so it participates in refresh/auto-refresh normally); "Load
+  // more" appends subsequent pages on top of it. A fresh first page (new
+  // address, manual/auto refresh) resets this back to empty.
+  //
+  // `moreAvailable` is derived during render, not tracked as its own piece
+  // of state kept in sync via an effect — a full page suggests another page
+  // might exist, and that's knowable directly from whichever page loaded
+  // last (`lastExtraBatchSize` once "Load more" has been used at least
+  // once, otherwise `readings` itself) without a second render ever
+  // observing a stale answer in between.
+  const [moreReadings, setMoreReadings] = useState<Reading[]>([]);
+  const [lastExtraBatchSize, setLastExtraBatchSize] = useState<number | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  useEffect(() => {
+    setMoreReadings([]);
+    setLastExtraBatchSize(null);
+  }, [address, refreshKey]);
+
+  const moreAvailable =
+    readings.status === 'success' &&
+    (lastExtraBatchSize === null
+      ? readings.data.length === READINGS_PAGE_SIZE
+      : lastExtraBatchSize === READINGS_PAGE_SIZE);
+
+  async function loadMoreReadings() {
+    if (readings.status !== 'success') return;
+    setLoadingMore(true);
+    try {
+      const offset = READINGS_PAGE_SIZE + moreReadings.length;
+      const batch = await api.getReadings(address, READINGS_PAGE_SIZE, offset);
+      setMoreReadings((prev) => [...prev, ...batch]);
+      setLastExtraBatchSize(batch.length);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  const allReadings = readings.status === 'success' ? [...readings.data, ...moreReadings] : [];
 
   const isRefreshing =
     device.status === 'loading' || readings.status === 'loading' || claims.status === 'loading';
@@ -120,12 +163,12 @@ export function DeviceDetail({ address, onBack }: Props) {
           </div>
           {readings.status === 'loading' && <LoadingMessage />}
           {readings.status === 'error' && <ErrorMessage message={readings.error} />}
-          {readings.status === 'success' && readings.data.length === 0 && (
+          {readings.status === 'success' && allReadings.length === 0 && (
             <EmptyMessage label="No readings yet." />
           )}
-          {readings.status === 'success' && <ReadingsChart readings={readings.data} />}
+          {readings.status === 'success' && <ReadingsChart readings={allReadings} />}
           {readings.status === 'success' &&
-            readings.data.map((reading) => (
+            allReadings.map((reading) => (
               <div className="row" key={reading.id}>
                 <span className="k">
                   epoch {reading.epoch} · region {reading.region_code}
@@ -136,6 +179,16 @@ export function DeviceDetail({ address, onBack }: Props) {
                 </span>
               </div>
             ))}
+          {readings.status === 'success' && moreAvailable && (
+            <button
+              className="glass-button"
+              onClick={loadMoreReadings}
+              disabled={loadingMore}
+              style={{ width: '100%', marginTop: 10 }}
+            >
+              {loadingMore ? 'Loading…' : 'Load more'}
+            </button>
+          )}
         </section>
 
         <section className="glass panel">
