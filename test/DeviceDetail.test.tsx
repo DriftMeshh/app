@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, screen, waitFor } from '@testing-library/react';
 import { DeviceDetail } from '../src/components/DeviceDetail';
 import { api } from '../src/api/client';
 import { getRejectedStatus } from '../src/wallet/contracts';
@@ -78,5 +78,68 @@ describe('DeviceDetail', () => {
 
     await waitFor(() => expect(screen.getByText('weather')).toBeInTheDocument());
     expect(screen.queryByText(/rejected readings/i)).not.toBeInTheDocument();
+  });
+
+  describe('auto-refresh', () => {
+    const originalVisibilityState = Object.getOwnPropertyDescriptor(
+      document,
+      'visibilityState',
+    );
+
+    function setVisibility(state: 'visible' | 'hidden') {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => state,
+      });
+    }
+
+    beforeEach(() => {
+      vi.mocked(getRejectedStatus).mockResolvedValue({ rejectedCount: 0, threshold: 0 });
+      setVisibility('visible');
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      if (originalVisibilityState) {
+        Object.defineProperty(document, 'visibilityState', originalVisibilityState);
+      }
+    });
+
+    it('refetches after the poll interval while the tab is visible', async () => {
+      render(<DeviceDetail address="GDEVICE1" onBack={() => {}} />);
+      // Wait for the initial fetch to actually resolve (not just be called) —
+      // isRefreshingRef only flips to false once status reaches 'success'.
+      await vi.waitFor(() => expect(screen.getByText('weather')).toBeInTheDocument());
+      expect(api.getDevice).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(12_000);
+      });
+
+      expect(api.getDevice).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not refetch while the tab is hidden', async () => {
+      render(<DeviceDetail address="GDEVICE1" onBack={() => {}} />);
+      await vi.waitFor(() => expect(screen.getByText('weather')).toBeInTheDocument());
+      expect(api.getDevice).toHaveBeenCalledTimes(1);
+
+      setVisibility('hidden');
+      await act(async () => { await vi.advanceTimersByTimeAsync(12_000); });
+
+      expect(api.getDevice).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops polling once the component unmounts', async () => {
+      const { unmount } = render(<DeviceDetail address="GDEVICE1" onBack={() => {}} />);
+      await vi.waitFor(() => expect(screen.getByText('weather')).toBeInTheDocument());
+      expect(api.getDevice).toHaveBeenCalledTimes(1);
+
+      unmount();
+      await act(async () => { await vi.advanceTimersByTimeAsync(24_000); });
+
+      expect(api.getDevice).toHaveBeenCalledTimes(1);
+    });
   });
 });
