@@ -6,7 +6,11 @@ const STORAGE_KEY = 'driftmesh-theme';
 
 function getStoredTheme(): Theme | null {
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
+    // `window.localStorage`, not the bare global — Node 22+'s own
+    // experimental localStorage global (unconfigured without a CLI flag,
+    // and throwing on every call) can otherwise shadow jsdom's actual
+    // implementation depending on the Node version running the test suite.
+    const v = window.localStorage.getItem(STORAGE_KEY);
     return v === 'light' || v === 'dark' ? v : null;
   } catch {
     return null;
@@ -49,7 +53,7 @@ export function ThemeToggle() {
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     try {
-      localStorage.setItem(STORAGE_KEY, next);
+      window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
       // Storage unavailable (private window, blocked site data) — the
       // toggle still works for this page load via the DOM attribute below.

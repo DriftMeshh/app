@@ -17,7 +17,7 @@ function mockMatchMedia(prefersDark: boolean) {
 }
 
 beforeEach(() => {
-  localStorage.clear();
+  window.localStorage.clear();
   delete document.documentElement.dataset.theme;
   mockMatchMedia(true);
 });
@@ -43,17 +43,17 @@ describe('ThemeToggle', () => {
     fireEvent.click(screen.getByRole('button'));
 
     expect(document.documentElement.dataset.theme).toBe('light');
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('light');
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBe('light');
     expect(screen.getByRole('button')).toHaveAccessibleName(/switch to dark theme/i);
 
     fireEvent.click(screen.getByRole('button'));
 
     expect(document.documentElement.dataset.theme).toBe('dark');
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('dark');
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBe('dark');
   });
 
   it('applies a previously-stored preference on mount', () => {
-    localStorage.setItem(STORAGE_KEY, 'light');
+    window.localStorage.setItem(STORAGE_KEY, 'light');
     render(<ThemeToggle />);
 
     expect(document.documentElement.dataset.theme).toBe('light');
