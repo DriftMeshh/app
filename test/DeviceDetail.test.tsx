@@ -46,6 +46,19 @@ beforeEach(() => {
 });
 
 describe('DeviceDetail', () => {
+  it('shows loading skeletons for each panel before its data arrives', () => {
+    // Leave all three fetches unresolved so the loading state is still
+    // showing at assertion time.
+    vi.mocked(api.getDevice).mockReset().mockReturnValue(new Promise(() => {}));
+    vi.mocked(api.getReadings).mockReset().mockReturnValue(new Promise(() => {}));
+    vi.mocked(api.getClaims).mockReset().mockReturnValue(new Promise(() => {}));
+    vi.mocked(getRejectedStatus).mockReset().mockReturnValue(new Promise(() => {}));
+
+    render(<DeviceDetail address="GDEVICE1" onBack={() => {}} />);
+
+    expect(screen.getAllByRole('status', { name: /loading/i })).toHaveLength(3);
+  });
+
   it('shows the rejected/threshold ratio, flagged as danger once at or past the threshold', async () => {
     vi.mocked(getRejectedStatus).mockResolvedValue({ rejectedCount: 3, threshold: 3 });
 

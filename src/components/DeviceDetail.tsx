@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { formatRelativeTime, truncateAddress } from '../format';
-import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
+import { ErrorMessage, EmptyMessage, PanelSkeleton } from './StatusMessage';
 import { ClaimAction } from './ClaimAction';
 import { ReadingsChart } from './ReadingsChart';
 import { getRejectedStatus } from '../wallet/contracts';
@@ -106,7 +106,7 @@ export function DeviceDetail({ address, onBack }: Props) {
             {isRefreshing ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
-        {device.status === 'loading' && <LoadingMessage />}
+        {device.status === 'loading' && <PanelSkeleton rows={4} />}
         {device.status === 'error' && <ErrorMessage message={device.error} />}
         {device.status === 'success' && (
           <>
@@ -161,7 +161,7 @@ export function DeviceDetail({ address, onBack }: Props) {
           <div className="panel-header">
             <h2>Recent readings</h2>
           </div>
-          {readings.status === 'loading' && <LoadingMessage />}
+          {readings.status === 'loading' && <PanelSkeleton rows={3} />}
           {readings.status === 'error' && <ErrorMessage message={readings.error} />}
           {readings.status === 'success' && allReadings.length === 0 && (
             <EmptyMessage label="No readings yet." />
@@ -195,7 +195,7 @@ export function DeviceDetail({ address, onBack }: Props) {
           <div className="panel-header">
             <h2>Claims</h2>
           </div>
-          {claims.status === 'loading' && <LoadingMessage />}
+          {claims.status === 'loading' && <PanelSkeleton rows={3} />}
           {claims.status === 'error' && <ErrorMessage message={claims.error} />}
           {claims.status === 'success' && claims.data.length === 0 && (
             <EmptyMessage label="No payouts claimed yet." />
