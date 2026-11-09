@@ -7,14 +7,23 @@ import { test, expect } from '@playwright/test';
  * caught a real production incident this project hit once: a render
  * crash that blanked the entire page with nothing in the DOM and no
  * visible error, which no mocked component test surfaced.
+ *
+ * CI has no backend configured at all (no .env, nothing committed — see
+ * .gitignore), so every fetch 404s/502s there; these tests are written to
+ * tolerate that (checking "didn't crash", not "shows real data") and only
+ * track `pageerror` (uncaught exceptions), never generic console.error,
+ * since a failed network request logs one of those too and isn't a bug.
  */
 
-test('the landing page loads without a console error', async ({ page }) => {
+test('the landing page loads without an uncaught render error', async ({ page }) => {
+  // Only `pageerror` (uncaught JS exceptions — real render crashes), not
+  // every console.error: in an environment with no backend configured
+  // (e.g. this suite's own CI job), the browser logs a console error for
+  // each failed network request, which isn't an app bug — Landing already
+  // handles that gracefully (shows "—" placeholders, see ConnectivityBanner)
+  // and that's exactly the behavior this suite should NOT fail on.
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(msg.text());
-  });
 
   await page.goto('/');
 
