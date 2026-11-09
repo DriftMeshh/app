@@ -27,13 +27,14 @@ beforeEach(() => {
 });
 
 describe('DeviceList', () => {
-  it('shows a loading state, then renders devices', async () => {
+  it('shows a loading skeleton, then renders devices', async () => {
     vi.mocked(api.listDevicesPage).mockResolvedValue(page([mockDevice]));
     render(<DeviceList onSelect={() => {}} />);
 
-    expect(screen.getByText(/fetching devices/i)).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: /loading/i })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('weather')).toBeInTheDocument());
     expect(screen.getByText('Active')).toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: /loading/i })).not.toBeInTheDocument();
   });
 
   it('shows an empty-state message when there are no devices', async () => {

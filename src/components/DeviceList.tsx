@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { truncateAddress, formatUnixSeconds } from '../format';
-import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
+import { ErrorMessage, EmptyMessage, DeviceTableSkeleton } from './StatusMessage';
 import type { Device } from '../api/types';
 
 interface Props {
@@ -112,7 +112,7 @@ export function DeviceList({ onSelect }: Props) {
         </div>
       )}
 
-      {state.status === 'loading' && <LoadingMessage label="Fetching devices…" />}
+      {state.status === 'loading' && <DeviceTableSkeleton />}
       {state.status === 'error' && <ErrorMessage message={state.error} />}
       {state.status === 'success' && state.data.data.length === 0 && (
         <EmptyMessage label="No devices indexed yet. Register one with device-sdk and it'll show up here." />
