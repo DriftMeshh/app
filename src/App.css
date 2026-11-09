@@ -930,3 +930,48 @@ footer.note {
   font-family: monospace;
   word-break: break-word;
 }
+
+/* ---- Loading skeletons ---- */
+
+.skeleton-block {
+  display: inline-block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-2) 25%,
+    var(--bg-surface-hover) 50%,
+    var(--bg-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-k {
+  width: 80px;
+}
+
+.skeleton-v {
+  width: 140px;
+}
+
+.skeleton-pill {
+  width: 60px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block {
+    animation: none;
+  }
+}
