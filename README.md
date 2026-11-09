@@ -185,12 +185,10 @@ building this:
   Albedo/Rabet correctly, was visually confirmed; actually connecting
   through one wasn't, since none of those extensions are installed in
   the sandboxed browser used for development).
-- **Map tiles fall back to a free, unauthenticated third-party service**
-  (OpenStreetMap) when `VITE_MAPBOX_TOKEN` isn't set — fine for a demo,
-  but no uptime/rate-limit guarantee. Setting the token switches to
-  Mapbox, which is the paid-tier-capable provider this used to call for;
-  Mapbox's own free tier (50k map loads/month) still applies no-cost for
-  a project this size.
+- **Map tiles use Mapbox when `VITE_MAPBOX_TOKEN` is set** (free tier:
+  50k map loads/month — sufficient for a project this size); without a
+  token, tiles fall back to plain OpenStreetMap with a CSS dark filter
+  so local development works with zero required configuration.
 - **Claim only works when the connected wallet IS the device** — correct
   for the current architecture (see "Wallet integration" above) but
   means an "operator" who manages multiple devices from one wallet can't
