@@ -12,8 +12,9 @@ import { TickerBar } from './components/TickerBar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ConnectivityBanner } from './components/ConnectivityBanner';
+import { OperatorDashboard } from './components/OperatorDashboard';
 
-type Tab = 'devices' | 'map' | 'region' | 'subscription';
+type Tab = 'devices' | 'map' | 'region' | 'subscription' | 'my-devices';
 type View = 'landing' | 'app';
 
 function App() {
@@ -76,6 +77,9 @@ function App() {
           <button aria-pressed={tab === 'subscription'} onClick={() => selectTab('subscription')}>
             Subscription
           </button>
+          <button aria-pressed={tab === 'my-devices'} onClick={() => selectTab('my-devices')}>
+            My devices
+          </button>
         </nav>
 
         <main className="page">
@@ -96,6 +100,14 @@ function App() {
             )}
             {tab === 'region' && <RegionLookup />}
             {tab === 'subscription' && <SubscriptionCheck />}
+            {tab === 'my-devices' && (
+              <OperatorDashboard
+                onSelectDevice={(address) => {
+                  setTab('devices');
+                  setSelectedDevice(address);
+                }}
+              />
+            )}
           </ErrorBoundary>
 
           <footer className="note">
