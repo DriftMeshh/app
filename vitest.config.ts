@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vitest/config'
+import { defaultExclude, defineConfig } from 'vitest/config'
 
 // Kept separate from vite.config.ts: merging vitest's `test` field into
 // vite's own UserConfig type via `vitest/config`'s defineConfig hits a
@@ -16,5 +16,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
     globals: true,
+    // e2e/ holds Playwright specs (also named *.spec.ts, by that tool's own
+    // convention) — vitest's default glob would otherwise try to run them
+    // too, using the wrong test framework's globals.
+    exclude: [...defaultExclude, '**/e2e/**'],
   },
 })
