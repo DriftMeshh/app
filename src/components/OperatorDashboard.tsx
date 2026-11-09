@@ -3,7 +3,7 @@ import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { aggregateOperatorStats, type DeviceWithClaims } from '../operatorStats';
 import { formatDmu, truncateAddress } from '../format';
-import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
+import { ErrorMessage, EmptyMessage, PanelSkeleton } from './StatusMessage';
 
 interface Props {
   onSelectDevice: (address: string) => void;
@@ -38,7 +38,7 @@ export function OperatorDashboard({ onSelectDevice }: Props) {
         <span className="muted">Owner: {truncateAddress(address, 8, 8)}</span>
       </div>
 
-      {state.status === 'loading' && <LoadingMessage label="Fetching your devices…" />}
+      {state.status === 'loading' && <PanelSkeleton rows={5} />}
       {state.status === 'error' && <ErrorMessage message={state.error} />}
       {state.status === 'success' && state.data.length === 0 && (
         <EmptyMessage label="No devices are registered with this wallet as owner." />

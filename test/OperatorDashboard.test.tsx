@@ -63,6 +63,23 @@ describe('OperatorDashboard', () => {
     expect(screen.getByText(/connect your wallet/i)).toBeInTheDocument();
   });
 
+  it('shows a loading skeleton while fetching the owner\'s devices', async () => {
+    vi.mocked(api.listDevices).mockReturnValue(new Promise(() => {}));
+
+    render(
+      <>
+        <WalletButton />
+        <OperatorDashboard onSelectDevice={() => {}} />
+      </>,
+    );
+    await connectAs(OWNER);
+
+    // useAsync resets to 'loading' one effect tick after `address` changes —
+    // right at connect, a render can still show the pre-connect fetch's
+    // already-resolved (trivially empty) state for that one tick.
+    await waitFor(() => expect(screen.getByRole('status', { name: /loading/i })).toBeInTheDocument());
+  });
+
   it('shows an empty-state message when the wallet owns no devices', async () => {
     vi.mocked(api.listDevices).mockResolvedValue([device({ owner: 'GSOMEONE_ELSE' })]);
 
