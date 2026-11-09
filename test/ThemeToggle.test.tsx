@@ -16,8 +16,35 @@ function mockMatchMedia(prefersDark: boolean) {
   );
 }
 
+/**
+ * A minimal in-memory Storage implementation, stubbed in for both
+ * `localStorage` and `window.localStorage`. Needed because jsdom's real
+ * one isn't reliably available in every CI environment — on this repo's
+ * pinned Node 22, GitHub Actions' runner resolves `window.localStorage` to
+ * `undefined` (Node 22+ ships its own experimental, unconfigured
+ * localStorage global, which appears to shadow jsdom's depending on build/
+ * environment specifics); this passed locally under both Node 22 and 24
+ * before failing in CI, which is exactly the gap this stub closes — the
+ * test no longer depends on the ambient implementation at all.
+ */
+function createMemoryStorage(): Storage {
+  const data = new Map<string, string>();
+  return {
+    getItem: (key) => data.get(key) ?? null,
+    setItem: (key, value) => void data.set(key, value),
+    removeItem: (key) => void data.delete(key),
+    clear: () => data.clear(),
+    key: (index) => Array.from(data.keys())[index] ?? null,
+    get length() {
+      return data.size;
+    },
+  };
+}
+
 beforeEach(() => {
-  window.localStorage.clear();
+  const storage = createMemoryStorage();
+  vi.stubGlobal('localStorage', storage);
+  Object.defineProperty(window, 'localStorage', { value: storage, configurable: true });
   delete document.documentElement.dataset.theme;
   mockMatchMedia(true);
 });
