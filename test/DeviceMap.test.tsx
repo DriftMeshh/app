@@ -73,6 +73,12 @@ const unlocated: Device = {
 };
 
 describe('DeviceMap', () => {
+  it('shows a map-shaped loading skeleton before data arrives', () => {
+    vi.mocked(api.listDevices).mockReturnValue(new Promise(() => {}));
+    render(<DeviceMap onSelect={() => {}} />);
+    expect(screen.getByRole('status', { name: /loading/i })).toBeInTheDocument();
+  });
+
   it('shows an empty state when no device has a known location', async () => {
     vi.mocked(api.listDevices).mockResolvedValue([unlocated]);
     render(<DeviceMap onSelect={() => {}} />);

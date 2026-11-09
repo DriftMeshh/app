@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { api } from '../api/client';
 import { useAsync } from '../hooks/useAsync';
 import { truncateAddress } from '../format';
-import { LoadingMessage, ErrorMessage, EmptyMessage } from './StatusMessage';
+import { ErrorMessage, EmptyMessage, MapSkeleton } from './StatusMessage';
 import type { Device } from '../api/types';
 
 type LocatedDevice = Device & { lat: number; lon: number };
@@ -104,7 +104,7 @@ export function DeviceMap({ onSelect }: Props) {
         </div>
       </div>
 
-      {state.status === 'loading' && <LoadingMessage label="Fetching devices…" />}
+      {state.status === 'loading' && <MapSkeleton />}
       {state.status === 'error' && <ErrorMessage message={state.error} />}
       {state.status === 'success' && located.length === 0 && (
         <EmptyMessage label="No devices with known locations yet." />

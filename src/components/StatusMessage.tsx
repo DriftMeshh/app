@@ -26,6 +26,22 @@ export function PanelSkeleton({ rows = 4 }: { rows?: number }) {
   );
 }
 
+/** A block matching the map's real size (`.leaflet-wrap`/`.device-leaflet-map`,
+ * 420px tall) so the page doesn't jump once Leaflet mounts. */
+export function MapSkeleton() {
+  return (
+    <div
+      className="leaflet-wrap skeleton"
+      role="status"
+      aria-label="Loading"
+      aria-busy="true"
+      style={{ height: 420 }}
+    >
+      <span className="skeleton-block" style={{ width: '100%', height: '100%', borderRadius: 0 }} />
+    </div>
+  );
+}
+
 /** Placeholder table rows matching DeviceList's real `<table>` shape —
  * four columns, a handful of rows, so the loading state doesn't visually
  * jump once the real data replaces it. */
